@@ -1,11 +1,192 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WeGames</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WeGames</title>
+
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800&family=Barlow:wght@300;400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/style.css" />
 </head>
 <body>
-    
+
+  <!-- SIDEBAR -->
+  <nav id="sidebar">
+    <div class="sidebar-logo">
+      <img src="img/logo.png" alt="WeGames" id="logo-img"
+        onerror="this.style.display='none';document.getElementById('logo-txt').style.display='flex';" />
+      <div id="logo-txt" class="logo-fallback" style="display:none">
+        <span class="lf-we">We</span><span class="lf-games">Games</span>
+      </div>
+    </div>
+
+    <ul class="side-menu">
+      <li class="side-item active" data-section="inicio">
+        <i class="bi bi-house-fill"></i><span>Início</span>
+      </li>
+      <li class="side-item" data-section="loja">
+        <i class="bi bi-controller"></i><span>Loja</span>
+      </li>
+      <li class="side-item" data-section="favoritos">
+        <i class="bi bi-heart-fill"></i><span>Favoritos</span>
+      </li>
+    </ul>
+
+    <div class="side-label">GÊNEROS</div>
+    <ul class="side-menu" id="generos-menu"></ul>
+
+    <div class="side-label">PLATAFORMA</div>
+    <ul class="side-menu">
+      <li class="side-item" onclick="filtrarPlataforma('PC')">
+        <i class="bi bi-display"></i><span>PC</span>
+      </li>
+      <li class="side-item" onclick="filtrarPlataforma('Web Browser')">
+        <i class="bi bi-browser-chrome"></i><span>Browser</span>
+      </li>
+    </ul>
+  </nav>
+
+  <!-- MAIN -->
+  <div id="main">
+
+    <!-- TOPBAR -->
+    <header id="topbar">
+      <div class="search-box">
+        <i class="bi bi-search"></i>
+        <input type="text" id="busca-input" placeholder="Buscar jogos..." autocomplete="off" />
+      </div>
+      <div class="top-actions">
+        <span id="fav-counter" class="fav-badge" style="display:none">
+          <i class="bi bi-heart-fill"></i>
+          <span id="fav-count">0</span>
+        </span>
+        <div class="avatar"><i class="bi bi-person-fill"></i></div>
+      </div>
+    </header>
+
+    <!-- CONTEÚDO -->
+    <main id="conteudo">
+
+      <!-- SEÇÃO INÍCIO -->
+      <section id="sec-inicio">
+        <!-- HERO -->
+        <div class="hero">
+          <div class="hero-glow"></div>
+          <div class="hero-inner">
+            <div class="hero-badge">🎮 Plataforma de Jogos</div>
+            <h1 class="hero-title">Descubra seu próximo<br/><span class="hero-accent">jogo favorito</span></h1>
+            <p class="hero-sub">Mais de 500 jogos gratuitos para explorar, favoritar e jogar.</p>
+            <div class="hero-btns">
+              <button class="btn-primary" onclick="navegarPara('loja')">
+                <i class="bi bi-controller"></i> Explorar Loja
+              </button>
+              <button class="btn-ghost" onclick="navegarPara('favoritos')">
+                <i class="bi bi-heart"></i> Meus Favoritos
+              </button>
+            </div>
+          </div>
+          <div class="hero-stats">
+            <div class="stat"><span id="stat-total">—</span><small>Jogos</small></div>
+            <div class="stat"><span id="stat-generos">—</span><small>Gêneros</small></div>
+            <div class="stat"><span id="stat-favs">—</span><small>Favoritos</small></div>
+          </div>
+        </div>
+
+        <!-- EM DESTAQUE -->
+        <div class="sec-header">
+          <span class="sec-icon">🔥</span>
+          <h2>Em Destaque</h2>
+          <button class="link-btn" onclick="navegarPara('loja')">Ver todos <i class="bi bi-arrow-right"></i></button>
+        </div>
+        <div id="grid-destaque" class="jogos-grid"></div>
+
+        <!-- LANÇAMENTOS -->
+        <div class="sec-header mt-3">
+          <span class="sec-icon">🚀</span>
+          <h2>Lançamentos Recentes</h2>
+        </div>
+        <div id="grid-lancamentos" class="jogos-grid"></div>
+      </section>
+
+      <!-- SEÇÃO LOJA -->
+      <section id="sec-loja" style="display:none">
+        <div class="sec-header">
+          <span class="sec-icon">🛒</span>
+          <h2 id="loja-titulo">Todos os Jogos</h2>
+          <span id="loja-count" class="count-badge"></span>
+        </div>
+        <div id="grid-loja" class="jogos-grid"></div>
+        <div id="loja-vazio" class="empty-state" style="display:none">
+          <i class="bi bi-controller"></i>
+          <p>Nenhum jogo encontrado.</p>
+        </div>
+      </section>
+
+      <!-- SEÇÃO FAVORITOS -->
+      <section id="sec-favoritos" style="display:none">
+        <div class="sec-header">
+          <span class="sec-icon">⭐</span>
+          <h2>Meus Favoritos</h2>
+          <span id="fav-total-badge" class="count-badge"></span>
+        </div>
+        <div id="grid-favoritos" class="jogos-grid"></div>
+        <div id="fav-vazio" class="empty-state" style="display:none">
+          <i class="bi bi-heart"></i>
+          <p>Você ainda não favoritou nenhum jogo.</p>
+          <button class="btn-primary" onclick="navegarPara('loja')">
+            <i class="bi bi-controller"></i> Explorar Loja
+          </button>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- MODAL DETALHE -->
+  <div id="modal-overlay" class="modal-overlay" style="display:none" onclick="fecharModal(event)">
+    <div class="modal-box">
+      <button class="modal-close" onclick="fecharModal()"><i class="bi bi-x-lg"></i></button>
+      <img id="modal-img" src="" alt="" />
+      <div class="modal-info">
+        <div class="modal-badges">
+          <span id="modal-genero" class="badge-genero"></span>
+          <span id="modal-plataforma" class="badge-plat"></span>
+        </div>
+        <h2 id="modal-titulo"></h2>
+        <p id="modal-desc"></p>
+        <div class="modal-meta">
+          <span><i class="bi bi-building"></i> <span id="modal-pub"></span></span>
+          <span><i class="bi bi-calendar3"></i> <span id="modal-data"></span></span>
+        </div>
+        <div class="modal-preco">
+          <span class="preco-free">GRATUITO</span>
+          <div class="modal-actions">
+            <button id="modal-fav-btn" class="btn-ghost" onclick="toggleFavModal()">
+              <i class="bi bi-heart"></i> Favoritar
+            </button>
+            <a id="modal-link" href="#" target="_blank" class="btn-primary">
+              <i class="bi bi-play-fill"></i> Jogar Agora
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- LOADING -->
+  <div id="loading" class="loading-screen">
+    <div class="loading-logo">
+      <span class="lf-we">We</span><span class="lf-games">Games</span>
+    </div>
+    <div class="loading-bar"><div class="loading-fill"></div></div>
+    <p>Carregando jogos...</p>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="js/storage.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/app.js"></script>
 </body>
 </html>
