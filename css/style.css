@@ -317,18 +317,43 @@ input:focus-visible {
 
 .banner {
   min-height: 320px;
-  display: flex;
-  align-items: center;
-  padding: clamp(28px, 5vw, 56px);
+  position: relative;
+  overflow: hidden;
+  display: block;
+  padding: 0;
   margin-bottom: 42px;
   border: 1px solid rgba(255, 255, 255, .08);
   border-radius: 10px;
+  background: #090b11;
+  box-shadow: var(--shadow);
+}
+
+.banner .carousel-inner,
+.banner .carousel-item {
+  min-height: inherit;
+  height: 320px;
+}
+
+.banner-slide {
+  min-height: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  padding: clamp(28px, 5vw, 56px);
   background:
-    linear-gradient(90deg, rgba(8, 9, 13, .92), rgba(8, 9, 13, .48), rgba(8, 9, 13, .22)),
-    url("https://www.cheapshark.com/img/stores/banners/0.png");
+    linear-gradient(90deg, rgba(8, 9, 13, .92), rgba(8, 9, 13, .56), rgba(8, 9, 13, .2)),
+    var(--banner-image);
   background-position: center;
   background-size: cover;
-  box-shadow: var(--shadow);
+}
+
+.banner-slide-contain {
+  background:
+    linear-gradient(90deg, rgba(8, 9, 13, .92), rgba(8, 9, 13, .62), rgba(8, 9, 13, .26)),
+    var(--banner-image);
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
 }
 
 .banner-content {
@@ -360,6 +385,68 @@ input:focus-visible {
   margin-bottom: 20px;
   color: var(--warning);
   font-size: 1.35rem;
+}
+
+.banner-control {
+  width: 54px;
+  opacity: .78;
+}
+
+.banner-control:hover {
+  opacity: 1;
+}
+
+.banner-control .carousel-control-prev-icon,
+.banner-control .carousel-control-next-icon {
+  width: 38px;
+  height: 38px;
+  border: 1px solid rgba(255, 255, 255, .12);
+  border-radius: 999px;
+  background-color: rgba(17, 20, 27, .74);
+  background-size: 50%;
+}
+
+.banner-indicators {
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.banner-indicators [data-bs-target] {
+  position: relative;
+  overflow: hidden;
+  width: 8px;
+  height: 8px;
+  margin: 0;
+  border: 0;
+  border-radius: 999px;
+  background-color: var(--muted);
+  opacity: .45;
+  transition: width .25s ease, opacity .25s ease, background-color .25s ease;
+}
+
+.banner-indicators .active {
+  width: 32px;
+  background-color: rgba(255, 255, 255, .22);
+  opacity: 1;
+}
+
+.banner-indicators .active::after {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  border-radius: inherit;
+  background: var(--primary);
+  content: "";
+  transform: scaleX(0);
+  transform-origin: left center;
+  animation: banner-indicator-fill 5.5s linear forwards;
+}
+
+@keyframes banner-indicator-fill {
+  to {
+    transform: scaleX(1);
+  }
 }
 
 .btn-primary {
@@ -458,6 +545,7 @@ input:focus-visible {
   border: 1px solid var(--line);
   border-radius: 8px;
   background: var(--surface);
+  cursor: pointer;
   transition: transform .2s ease, border-color .2s ease, box-shadow .2s ease;
 }
 
@@ -467,11 +555,19 @@ input:focus-visible {
   box-shadow: 0 16px 34px rgba(0, 0, 0, .25);
 }
 
+.card-game:focus-visible {
+  outline: 3px solid rgba(var(--primary-rgb), .55);
+  outline-offset: 4px;
+}
+
 .game-cover {
   width: 100%;
   aspect-ratio: 16 / 9;
-  object-fit: cover;
-  background: #0c0e13;
+  object-fit: contain;
+  object-position: center;
+  background:
+    radial-gradient(circle at center, rgba(var(--primary-rgb), .08), transparent 58%),
+    #0c0e13;
 }
 
 .card-body {
@@ -589,6 +685,189 @@ input:focus-visible {
   font-weight: 800;
 }
 
+.modal-backdrop.show {
+  opacity: .78;
+  backdrop-filter: blur(8px);
+}
+
+.game-detail-modal .modal-dialog {
+  max-width: min(980px, calc(100vw - 28px));
+}
+
+.game-detail-content {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(var(--primary-rgb), .28);
+  border-radius: 10px;
+  background: #090b11;
+  color: var(--text);
+  box-shadow: 0 28px 80px rgba(0, 0, 0, .55);
+}
+
+.game-detail-backdrop {
+  position: absolute;
+  inset: -24px;
+  background-position: center;
+  background-size: cover;
+  filter: blur(22px);
+  opacity: .24;
+  transform: scale(1.08);
+}
+
+.game-detail-content::after {
+  position: absolute;
+  inset: 0;
+  content: "";
+  background:
+    linear-gradient(90deg, rgba(9, 11, 17, .54), rgba(9, 11, 17, .9) 58%),
+    linear-gradient(180deg, transparent, rgba(9, 11, 17, .86));
+  pointer-events: none;
+}
+
+.game-detail-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  z-index: 3;
+  padding: 10px;
+  border-radius: 999px;
+  background-color: rgba(17, 20, 27, .68);
+}
+
+.game-detail-layout {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  grid-template-columns: minmax(280px, 1.2fr) minmax(300px, .8fr);
+  align-items: center;
+  gap: 28px;
+  padding: clamp(18px, 3vw, 32px);
+}
+
+.game-detail-media {
+  min-height: 430px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.game-detail-image {
+  width: 100%;
+  max-height: 620px;
+  min-height: 360px;
+  border: 1px solid rgba(255, 255, 255, .12);
+  border-radius: 8px;
+  object-fit: contain;
+  object-position: center;
+  background:
+    radial-gradient(circle at center, rgba(var(--primary-rgb), .08), transparent 62%),
+    #07090e;
+  box-shadow: 0 22px 50px rgba(0, 0, 0, .42);
+}
+
+.game-detail-info {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 430px;
+  padding: 24px 0;
+}
+
+.game-detail-tags {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.game-detail-store {
+  display: inline-flex;
+  align-items: center;
+  min-height: 26px;
+  padding: 0 9px;
+  border: 1px solid rgba(255, 255, 255, .13);
+  border-radius: 6px;
+  background: rgba(17, 20, 27, .74);
+  color: var(--muted-strong);
+  font-size: .78rem;
+  font-weight: 800;
+}
+
+.game-detail-info h2 {
+  margin: 0;
+  color: var(--text);
+  font-size: clamp(1.8rem, 4vw, 3.2rem);
+  font-weight: 900;
+  line-height: 1;
+}
+
+.game-detail-subtitle {
+  margin: 12px 0 18px;
+  color: var(--muted-strong);
+  font-size: .98rem;
+  line-height: 1.55;
+}
+
+.game-detail-price-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.game-detail-price-row .price {
+  font-size: 1.45rem;
+}
+
+.game-detail-stats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin: 0 0 22px;
+}
+
+.game-detail-stats div {
+  min-height: 72px;
+  padding: 12px;
+  border: 1px solid rgba(255, 255, 255, .1);
+  border-radius: 8px;
+  background: rgba(17, 20, 27, .76);
+}
+
+.game-detail-stats dt {
+  margin-bottom: 5px;
+  color: var(--muted);
+  font-size: .72rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.game-detail-stats dd {
+  margin: 0;
+  color: var(--text);
+  font-weight: 900;
+}
+
+.game-detail-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.game-detail-actions .btn {
+  min-height: 42px;
+  border-radius: 6px;
+  font-weight: 900;
+}
+
+.game-detail-actions .btn-outline-light.active {
+  border-color: rgba(255, 191, 60, .7);
+  background: rgba(255, 191, 60, .12);
+  color: var(--warning);
+}
+
 @media (max-width: 980px) {
   .app-shell {
     display: block;
@@ -623,6 +902,28 @@ input:focus-visible {
   .content {
     max-width: none;
   }
+
+  .game-detail-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .game-detail-media,
+  .game-detail-info {
+    min-height: auto;
+  }
+
+  .game-detail-media {
+    aspect-ratio: 16 / 9;
+  }
+
+  .game-detail-image {
+    max-height: 420px;
+    min-height: 220px;
+  }
+
+  .game-detail-info {
+    padding-top: 0;
+  }
 }
 
 @media (max-width: 640px) {
@@ -652,7 +953,25 @@ input:focus-visible {
 
   .banner {
     min-height: 280px;
-    padding: 26px 20px;
+  }
+
+  .banner .carousel-inner,
+  .banner .carousel-item {
+    height: 280px;
+  }
+
+  .banner-slide {
+    min-height: 100%;
+    padding: 26px 52px 42px 20px;
+  }
+
+  .banner-slide-contain {
+    background-position: center;
+    background-size: cover;
+  }
+
+  .banner-control {
+    width: 42px;
   }
 
   .banner h1 {
@@ -661,5 +980,28 @@ input:focus-visible {
 
   .result-count {
     white-space: normal;
+  }
+
+  .game-detail-modal .modal-dialog {
+    max-width: calc(100vw - 18px);
+    margin-inline: auto;
+  }
+
+  .game-detail-layout {
+    gap: 18px;
+    padding: 16px;
+  }
+
+  .game-detail-image {
+    max-height: 320px;
+    min-height: 190px;
+  }
+
+  .game-detail-stats {
+    grid-template-columns: 1fr;
+  }
+
+  .game-detail-actions .btn {
+    width: 100%;
   }
 }

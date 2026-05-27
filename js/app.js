@@ -6,9 +6,32 @@ const listaFavoritos = document.getElementById("listaFavoritos");
 const statusProdutos = document.getElementById("statusProdutos");
 const contadorProdutos = document.getElementById("contadorProdutos");
 const contadorFavoritos = document.getElementById("contadorFavoritos");
+const precoForzaCarousel = document.getElementById("forzaCarouselPrice");
 const carregarMais = document.getElementById("carregarMais");
 const busca = document.getElementById("busca");
 const formularioBusca = document.querySelector(".search-form");
+const linksMenu = document.querySelectorAll(".menu a[href^='#']");
+const secoesMenu = [...linksMenu]
+  .map((link) => ({
+    hash: link.getAttribute("href"),
+    elemento: document.querySelector(link.getAttribute("href")),
+  }))
+  .filter((secao) => secao.elemento);
+const detalheModal = document.getElementById("gameDetailModal");
+const detalheBackdrop = document.getElementById("gameDetailBackdrop");
+const detalheImagem = document.getElementById("gameDetailImage");
+const detalheDesconto = document.getElementById("gameDetailDiscount");
+const detalheLoja = document.getElementById("gameDetailStore");
+const detalheTitulo = document.getElementById("gameDetailTitle");
+const detalheSubtitulo = document.getElementById("gameDetailSubtitle");
+const detalhePreco = document.getElementById("gameDetailPrice");
+const detalhePrecoAntigo = document.getElementById("gameDetailOldPrice");
+const detalheSteam = document.getElementById("gameDetailSteam");
+const detalheMetacritic = document.getElementById("gameDetailMetacritic");
+const detalheAvaliacaoOferta = document.getElementById("gameDetailRating");
+const detalheLancamento = document.getElementById("gameDetailRelease");
+const detalheFavorito = document.getElementById("gameDetailFavorite");
+const detalheOferta = document.getElementById("gameDetailDeal");
 
 let produtos = [];
 let produtosGerais = [];
@@ -23,6 +46,12 @@ let chegouAoFimGeral = false;
 let chegouAoFimBusca = true;
 let requisicaoAtual = 0;
 let controladorProdutos = null;
+let produtoEmDetalhe = null;
+let modalDetalhe = null;
+let menuScrollPendente = false;
+let menuTravadoHash = "";
+let temporizadorMenuTravado = null;
+let jogoForzaCarousel = null;
 
 const formatadorMoeda = new Intl.NumberFormat("pt-BR", {
   style: "currency",
@@ -79,6 +108,63 @@ function descontoProduto(produto) {
   return Number.isFinite(desconto) ? desconto : 0;
 }
 
+function steamAppId(produto) {
+  const id = String(produto.steamAppID || "").trim();
+  return id && id !== "0" ? id : "";
+}
+
+function fontesImagemProduto(produto, tipo = "card") {
+  const id = steamAppId(produto);
+  const fontes = [];
+
+  if (id && tipo === "detalhe") {
+    fontes.push(`https://cdn.cloudflare.steamstatic.com/steam/apps/${id}/library_hero.jpg`);
+    fontes.push(`https://cdn.cloudflare.steamstatic.com/steam/apps/${id}/capsule_616x353.jpg`);
+  }
+
+  if (id) {
+    fontes.push(`https://cdn.cloudflare.steamstatic.com/steam/apps/${id}/header.jpg`);
+  }
+
+  if (produto.thumb) {
+    fontes.push(produto.thumb);
+  }
+
+  fontes.push("images/WeGames.png");
+
+  return [...new Set(fontes)];
+}
+
+function carregarImagemComFallback(imagem, fontes, alt, aoTrocarFonte) {
+  let indiceFonte = 0;
+
+  function aplicarFonte() {
+    const fonte = fontes[indiceFonte] || "images/WeGames.png";
+
+    imagem.src = fonte;
+    imagem.alt = alt;
+
+    if (aoTrocarFonte) {
+      aoTrocarFonte(fonte);
+    }
+  }
+
+  imagem.onerror = () => {
+    indiceFonte += 1;
+
+    if (indiceFonte < fontes.length) {
+      aplicarFonte();
+      return;
+    }
+
+    imagem.onerror = null;
+    imagem.src = "images/WeGames.png";
+    imagem.alt = "Capa indisponível";
+  };
+
+  aplicarFonte();
+}
+
 async function carregarProdutos({ novaBusca = false } = {}) {
   const termo = termoBuscaAtual;
   const emBusca = Boolean(termo);
@@ -131,6 +217,7 @@ async function carregarProdutos({ novaBusca = false } = {}) {
 
     renderProdutos(produtos);
     renderFavoritos();
+    atualizarPrecoForzaCarousel();
   } catch (erro) {
     if (erro.name === "AbortError") {
       return;
@@ -177,6 +264,7 @@ function renderProdutos(lista) {
       ? `Nenhum jogo encontrado para "${termoBuscaAtual}".`
       : "Nenhuma oferta disponível no momento.");
     atualizarBotaoCarregarMais();
+    atualizarMenuPorScroll();
     return;
   }
 
@@ -190,6 +278,7 @@ function renderProdutos(lista) {
 
   listaProdutos.appendChild(fragmento);
   atualizarBotaoCarregarMais();
+  atualizarMenuPorScroll();
 }
 
 function renderFavoritos() {
@@ -201,6 +290,7 @@ function renderFavoritos() {
     vazio.className = "empty";
     vazio.textContent = "Nenhum jogo favoritado ainda.";
     listaFavoritos.appendChild(vazio);
+    atualizarMenuPorScroll();
     return;
   }
 
@@ -211,6 +301,7 @@ function renderFavoritos() {
   });
 
   listaFavoritos.appendChild(fragmento);
+  atualizarMenuPorScroll();
 }
 
 function formatarContadorBusca(total) {
@@ -261,15 +352,15 @@ function criarBaseCard(produto) {
   const corpo = document.createElement("div");
 
   card.className = "card-game";
+  card.dataset.dealId = produto.dealID;
+  card.tabIndex = 0;
+  card.setAttribute("role", "button");
+  card.setAttribute("aria-label", `Abrir detalhes de ${produto.title}`);
 
   imagem.className = "game-cover";
-  imagem.src = produto.thumb || "images/WeGames.png";
-  imagem.alt = produto.title;
   imagem.loading = "lazy";
-  imagem.addEventListener("error", () => {
-    imagem.src = "images/WeGames.png";
-    imagem.alt = "Capa indisponível";
-  }, { once: true });
+  imagem.decoding = "async";
+  carregarImagemComFallback(imagem, fontesImagemProduto(produto), produto.title);
 
   corpo.className = "card-body";
 
@@ -349,6 +440,47 @@ function formatarPreco(valor) {
   return formatadorMoeda.format((Number(valor) || 0) * COTACAO_DOLAR_REAL);
 }
 
+function encontrarForzaHorizon5(lista) {
+  return lista.find((produto) => produto.title.toLowerCase() === "forza horizon 5")
+    || lista.find((produto) => produto.title.toLowerCase().includes("forza horizon 5"));
+}
+
+function atualizarPrecoForzaCarousel(jogoForza = null) {
+  if (!precoForzaCarousel) {
+    return;
+  }
+
+  if (jogoForza) {
+    jogoForzaCarousel = jogoForza;
+  }
+
+  const jogosCarregados = [...produtosGerais, ...resultadosBusca];
+  const forza = jogoForzaCarousel || encontrarForzaHorizon5(jogosCarregados);
+
+  if (forza) {
+    jogoForzaCarousel = forza;
+  }
+
+  precoForzaCarousel.textContent = forza
+    ? `Por apenas ${formatarPreco(forza.salePrice)}`
+    : precoForzaCarousel.textContent || "Carregando oferta...";
+}
+
+async function carregarPrecoForzaCarousel() {
+  if (!precoForzaCarousel) {
+    return;
+  }
+
+  try {
+    const resposta = await WeGamesAPI.buscarJogos({ termo: "Forza Horizon 5" });
+    const jogoForza = encontrarForzaHorizon5(resposta.produtos.filter(produtoValido));
+
+    atualizarPrecoForzaCarousel(jogoForza);
+  } catch (erro) {
+    console.error(erro);
+  }
+}
+
 function temDesconto(produto) {
   const precoAtual = Number(produto.salePrice);
   const precoNormal = Number(produto.normalPrice);
@@ -360,13 +492,130 @@ function temDesconto(produto) {
     && desconto >= 1;
 }
 
+function abrirDetalheJogo(id) {
+  const produto = encontrarProdutoPorId(id);
+
+  if (!produto) {
+    return;
+  }
+
+  produtoEmDetalhe = produto;
+  preencherDetalheJogo(produto);
+
+  if (!modalDetalhe) {
+    modalDetalhe = new bootstrap.Modal(detalheModal);
+  }
+
+  modalDetalhe.show();
+}
+
+function encontrarProdutoPorId(id) {
+  return produtos.find((produto) => produto.dealID === id)
+    || produtosGerais.find((produto) => produto.dealID === id)
+    || resultadosBusca.find((produto) => produto.dealID === id)
+    || favoritos.find((produto) => produto.dealID === id)
+    || (produtoEmDetalhe?.dealID === id ? produtoEmDetalhe : null);
+}
+
+function preencherDetalheJogo(produto) {
+  const fontesImagem = fontesImagemProduto(produto, "detalhe");
+
+  carregarImagemComFallback(detalheImagem, fontesImagem, produto.title, (fonte) => {
+    detalheBackdrop.style.backgroundImage = `url("${fonte}")`;
+  });
+  detalheTitulo.textContent = produto.title;
+  detalheSubtitulo.textContent = criarResumoJogo(produto);
+  detalhePreco.textContent = formatarPreco(produto.salePrice);
+  detalheOferta.href = `https://www.cheapshark.com/redirect?dealID=${encodeURIComponent(produto.dealID)}`;
+
+  preencherDescontoDetalhe(produto);
+  preencherPrecoAntigoDetalhe(produto);
+  preencherEstatisticasDetalhe(produto);
+  atualizarFavoritoDetalhe(produto);
+}
+
+function preencherDescontoDetalhe(produto) {
+  const produtoComDesconto = temDesconto(produto);
+
+  detalheDesconto.hidden = !produtoComDesconto;
+  detalheLoja.hidden = !produtoComDesconto;
+  detalheDesconto.textContent = produtoComDesconto
+    ? `-${Math.round(Number(produto.savings) || 0)}%`
+    : "";
+}
+
+function preencherPrecoAntigoDetalhe(produto) {
+  detalhePrecoAntigo.hidden = !temDesconto(produto);
+  detalhePrecoAntigo.textContent = temDesconto(produto) ? formatarPreco(produto.normalPrice) : "";
+}
+
+function preencherEstatisticasDetalhe(produto) {
+  detalheSteam.textContent = formatarAvaliacaoSteam(produto);
+  detalheMetacritic.textContent = formatarMetacritic(produto);
+  detalheAvaliacaoOferta.textContent = formatarAvaliacaoOferta(produto);
+  detalheLancamento.textContent = formatarDataLancamento(produto.releaseDate);
+}
+
+function criarResumoJogo(produto) {
+  if (produto.steamRatingText && produto.steamRatingText !== "0") {
+    return `Oferta com avaliação "${produto.steamRatingText}" na Steam.`;
+  }
+
+  return "Confira a melhor oferta encontrada para este jogo.";
+}
+
+function formatarAvaliacaoSteam(produto) {
+  const percentual = Number(produto.steamRatingPercent);
+
+  if (produto.steamRatingText && produto.steamRatingText !== "0" && Number.isFinite(percentual)) {
+    return `${produto.steamRatingText} (${percentual}%)`;
+  }
+
+  if (produto.steamRatingText && produto.steamRatingText !== "0") {
+    return produto.steamRatingText;
+  }
+
+  return "Sem avaliação";
+}
+
+function formatarMetacritic(produto) {
+  const nota = Number(produto.metacriticScore);
+  return Number.isFinite(nota) && nota > 0 ? `${nota}/100` : "Sem nota";
+}
+
+function formatarAvaliacaoOferta(produto) {
+  const nota = Number(produto.dealRating);
+  return Number.isFinite(nota) && nota > 0 ? `${nota.toFixed(1)}/10` : "Não informada";
+}
+
+function formatarDataLancamento(valor) {
+  const timestamp = Number(valor);
+
+  if (!Number.isFinite(timestamp) || timestamp <= 0) {
+    return "Não informado";
+  }
+
+  return new Intl.DateTimeFormat("pt-BR").format(new Date(timestamp * 1000));
+}
+
+function atualizarFavoritoDetalhe(produto) {
+  const favoritado = estaFavoritado(produto);
+  const icone = document.createElement("i");
+
+  icone.className = `bi ${favoritado ? "bi-star-fill" : "bi-star"} me-2`;
+  detalheFavorito.dataset.favoriteId = produto.dealID;
+  detalheFavorito.classList.toggle("active", favoritado);
+  detalheFavorito.setAttribute("aria-pressed", String(favoritado));
+  detalheFavorito.replaceChildren(icone, document.createTextNode(favoritado ? "Favoritado" : "Favoritar"));
+}
+
 function estaFavoritado(produto) {
   const chave = typeof produto === "string" ? chaveFavoritoPorId(produto) : chaveProduto(produto);
   return favoritos.some((favorito) => chaveProduto(favorito) === chave);
 }
 
 function alternarFavorito(id) {
-  const produto = produtos.find((item) => item.dealID === id);
+  const produto = encontrarProdutoPorId(id);
   const chave = produto ? chaveProduto(produto) : chaveFavoritoPorId(id);
   const existe = favoritos.some((favorito) => chaveProduto(favorito) === chave);
 
@@ -455,6 +704,99 @@ function atualizarBotaoCarregarMais() {
     : emBusca ? "Carregar mais resultados" : "Carregar mais jogos";
 }
 
+function atualizarMenuAtivo(hash = window.location.hash || "#inicio") {
+  const hashAtual = hash || "#inicio";
+
+  linksMenu.forEach((link) => {
+    const ativo = link.getAttribute("href") === hashAtual;
+
+    link.classList.toggle("active", ativo);
+
+    if (ativo) {
+      link.setAttribute("aria-current", "page");
+    } else {
+      link.removeAttribute("aria-current");
+    }
+  });
+}
+
+function hashMenuPorScroll() {
+  const pontoLeitura = window.scrollY + window.innerHeight * .35;
+  const alturaPagina = document.documentElement.scrollHeight;
+  const chegouAoFinal = alturaPagina > window.innerHeight + 32
+    && window.scrollY + window.innerHeight >= alturaPagina - 8;
+
+  if (chegouAoFinal) {
+    return "#favoritos";
+  }
+
+  return secoesMenu.reduce((hashAtual, secao) => {
+    if (secao.hash === "#inicio") {
+      return hashAtual;
+    }
+
+    const topoSecao = secao.elemento.getBoundingClientRect().top + window.scrollY;
+    return pontoLeitura >= topoSecao ? secao.hash : hashAtual;
+  }, "#inicio");
+}
+
+function atualizarMenuPorScroll() {
+  if (menuScrollPendente) {
+    return;
+  }
+
+  menuScrollPendente = true;
+
+  requestAnimationFrame(() => {
+    atualizarMenuAtivo(menuTravadoHash || hashMenuPorScroll());
+    menuScrollPendente = false;
+  });
+}
+
+function travarMenuNoClique(hash) {
+  menuTravadoHash = hash;
+  atualizarMenuAtivo(hash);
+  clearTimeout(temporizadorMenuTravado);
+
+  temporizadorMenuTravado = setTimeout(() => {
+    menuTravadoHash = "";
+    atualizarMenuPorScroll();
+  }, 900);
+}
+
+function alvoInterativo(elemento) {
+  return elemento.closest("a, button");
+}
+
+function abrirCardDoEvento(evento) {
+  if (alvoInterativo(evento.target)) {
+    return;
+  }
+
+  const card = evento.target.closest(".card-game[data-deal-id]");
+
+  if (card) {
+    abrirDetalheJogo(card.dataset.dealId);
+  }
+}
+
+function abrirCardComTeclado(evento) {
+  if (evento.key !== "Enter" && evento.key !== " ") {
+    return;
+  }
+
+  if (alvoInterativo(evento.target)) {
+    return;
+  }
+
+  const card = evento.target.closest(".card-game[data-deal-id]");
+
+  if (card) {
+    evento.preventDefault();
+    abrirDetalheJogo(card.dataset.dealId);
+  }
+}
+
 function configurarEventos() {
   formularioBusca.addEventListener("submit", (evento) => {
     evento.preventDefault();
@@ -468,23 +810,59 @@ function configurarEventos() {
     carregarProdutos();
   });
 
+  linksMenu.forEach((link) => {
+    link.addEventListener("click", () => {
+      travarMenuNoClique(link.getAttribute("href"));
+    });
+  });
+
+  window.addEventListener("hashchange", () => {
+    atualizarMenuAtivo(menuTravadoHash || window.location.hash || "#inicio");
+    atualizarMenuPorScroll();
+  });
+
+  window.addEventListener("scroll", atualizarMenuPorScroll, { passive: true });
+  window.addEventListener("resize", atualizarMenuPorScroll);
+
   listaProdutos.addEventListener("click", (evento) => {
     const botao = evento.target.closest("[data-favorite-id]");
 
     if (botao) {
       alternarFavorito(botao.dataset.favoriteId);
+      return;
     }
+
+    abrirCardDoEvento(evento);
   });
+
+  listaProdutos.addEventListener("keydown", abrirCardComTeclado);
 
   listaFavoritos.addEventListener("click", (evento) => {
     const botao = evento.target.closest("[data-favorite-id]");
 
     if (botao) {
       alternarFavorito(botao.dataset.favoriteId);
+      return;
     }
+
+    abrirCardDoEvento(evento);
   });
+
+  listaFavoritos.addEventListener("keydown", abrirCardComTeclado);
+
+  detalheFavorito.addEventListener("click", () => {
+    if (!produtoEmDetalhe) {
+      return;
+    }
+
+    alternarFavorito(produtoEmDetalhe.dealID);
+    atualizarFavoritoDetalhe(produtoEmDetalhe);
+  });
+
 }
 
 configurarEventos();
+atualizarMenuAtivo(window.location.hash || hashMenuPorScroll());
 renderFavoritos();
 carregarProdutos();
+carregarPrecoForzaCarousel();
