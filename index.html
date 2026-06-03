@@ -14,7 +14,7 @@
 </head>
 <body>
   <div class="app-shell">
-    <aside class="sidebar" aria-label="Navegação principal">
+    <aside id="sidebar" class="sidebar" aria-label="Navegação principal">
       <a class="brand" href="#inicio" aria-label="Página inicial da WeGames">
         <img src="images/WeGames.png" class="logo" alt="WeGames" />
       </a>
@@ -44,6 +44,10 @@
 
     <main id="inicio" class="content">
       <header class="topbar">
+        <button id="sidebarToggle" class="btn btn-icon sidebar-toggle" type="button" aria-controls="sidebar" aria-expanded="true" aria-label="Esconder menu">
+          <i class="bi bi-list" aria-hidden="true"></i>
+        </button>
+
         <form class="search-form" role="search">
           <label class="visually-hidden" for="busca">Buscar jogos</label>
           <div class="input-group search-group">
@@ -116,37 +120,37 @@
 
         <div class="carousel-inner">
           <div class="carousel-item active">
-            <div class="banner-slide banner-slide-contain" style="--banner-image: url('https://cdn.cloudflare.steamstatic.com/steam/apps/990080/library_hero.jpg');">
+            <div class="banner-slide banner-slide-contain" data-carousel-game="Hogwarts Legacy" style="--banner-image: url('https://cdn.cloudflare.steamstatic.com/steam/apps/990080/library_hero.jpg');">
               <div class="banner-content">
                 <span class="badge text-bg-primary">Oferta</span>
                 <h1>Hogwarts Legacy</h1>
                 <p>Explore Hogwarts, domine feitiços e viva sua própria jornada bruxa.</p>
                 <strong class="banner-price">Ofertas disponíveis</strong>
-                <a class="btn btn-primary" href="#produtos">Ver ofertas</a>
+                <button class="btn btn-primary" type="button">Ver detalhes</button>
               </div>
             </div>
           </div>
 
           <div class="carousel-item">
-            <div class="banner-slide" style="--banner-image: url('https://cdn.cloudflare.steamstatic.com/steam/apps/1551360/library_hero.jpg');">
+            <div class="banner-slide" data-carousel-game="Forza Horizon 5" style="--banner-image: url('https://cdn.cloudflare.steamstatic.com/steam/apps/1551360/library_hero.jpg');">
               <div class="banner-content">
                 <span class="badge text-bg-primary">Destaque</span>
                 <h1>Forza Horizon 5</h1>
                 <p>Velocidade, exploração e descontos em alta rotação.</p>
                 <strong id="forzaCarouselPrice" class="banner-price">Carregando oferta...</strong>
-                <a class="btn btn-primary" href="#produtos">Ver jogos</a>
+                <button class="btn btn-primary" type="button">Ver detalhes</button>
               </div>
             </div>
           </div>
 
           <div class="carousel-item">
-            <div class="banner-slide" style="--banner-image: url('https://cdn.cloudflare.steamstatic.com/steam/apps/1091500/library_hero.jpg');">
+            <div class="banner-slide" data-carousel-game="Cyberpunk 2077" style="--banner-image: url('https://cdn.cloudflare.steamstatic.com/steam/apps/1091500/library_hero.jpg');">
               <div class="banner-content">
                 <span class="badge text-bg-primary">Oferta</span>
                 <h1>Cyberpunk 2077</h1>
                 <p>Explore mundos intensos e encontre sua próxima aventura.</p>
                 <strong class="banner-price">Ofertas atualizadas</strong>
-                <a class="btn btn-primary" href="#produtos">Explorar loja</a>
+                <button class="btn btn-primary" type="button">Ver detalhes</button>
               </div>
             </div>
           </div>
@@ -189,6 +193,10 @@
       </section>
     </main>
   </div>
+
+  <button id="scrollTopButton" class="btn scroll-top-button" type="button" aria-label="Voltar ao topo">
+    <i class="bi bi-arrow-up" aria-hidden="true"></i>
+  </button>
 
   <div class="modal fade game-detail-modal" id="gameDetailModal" tabindex="-1" aria-labelledby="gameDetailTitle" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-xl">

@@ -8,9 +8,12 @@ const contadorProdutos = document.getElementById("contadorProdutos");
 const contadorFavoritos = document.getElementById("contadorFavoritos");
 const precoForzaCarousel = document.getElementById("forzaCarouselPrice");
 const carregarMais = document.getElementById("carregarMais");
+const botaoVoltarTopo = document.getElementById("scrollTopButton");
+const botaoSidebar = document.getElementById("sidebarToggle");
 const busca = document.getElementById("busca");
 const formularioBusca = document.querySelector(".search-form");
 const linksMenu = document.querySelectorAll(".menu a[href^='#']");
+const carrosselHero = document.getElementById("heroCarousel");
 const secoesMenu = [...linksMenu]
   .map((link) => ({
     hash: link.getAttribute("href"),
@@ -493,13 +496,16 @@ function temDesconto(produto) {
 }
 
 function abrirDetalheJogo(id) {
-  const produto = encontrarProdutoPorId(id);
+  abrirDetalheProduto(encontrarProdutoPorId(id));
+}
 
-  if (!produto) {
+function abrirDetalheProduto(produto) {
+  produtoEmDetalhe = produto;
+
+  if (!produtoEmDetalhe) {
     return;
   }
 
-  produtoEmDetalhe = produto;
   preencherDetalheJogo(produto);
 
   if (!modalDetalhe) {
@@ -509,12 +515,41 @@ function abrirDetalheJogo(id) {
   modalDetalhe.show();
 }
 
+async function abrirDetalheJogoPorTitulo(titulo) {
+  const produtoLocal = encontrarProdutoPorTitulo(titulo);
+
+  if (produtoLocal) {
+    abrirDetalheProduto(produtoLocal);
+    return;
+  }
+
+  try {
+    const resposta = await WeGamesAPI.buscarJogos({ termo: titulo });
+    const produtosValidos = resposta.produtos.filter(produtoValido);
+    const produto = encontrarProdutoPorTitulo(titulo, produtosValidos) || produtosValidos[0];
+
+    abrirDetalheProduto(produto);
+  } catch (erro) {
+    console.error(erro);
+  }
+}
+
 function encontrarProdutoPorId(id) {
   return produtos.find((produto) => produto.dealID === id)
     || produtosGerais.find((produto) => produto.dealID === id)
     || resultadosBusca.find((produto) => produto.dealID === id)
     || favoritos.find((produto) => produto.dealID === id)
     || (produtoEmDetalhe?.dealID === id ? produtoEmDetalhe : null);
+}
+
+function encontrarProdutoPorTitulo(
+  titulo,
+  lista = [...produtos, ...produtosGerais, ...resultadosBusca, ...favoritos, ...(jogoForzaCarousel ? [jogoForzaCarousel] : [])]
+) {
+  const tituloNormalizado = titulo.trim().toLowerCase();
+
+  return lista.find((produto) => produto.title.toLowerCase() === tituloNormalizado)
+    || lista.find((produto) => produto.title.toLowerCase().includes(tituloNormalizado));
 }
 
 function preencherDetalheJogo(produto) {
@@ -753,6 +788,23 @@ function atualizarMenuPorScroll() {
   });
 }
 
+function atualizarBotaoVoltarTopo() {
+  botaoVoltarTopo.classList.toggle("visible", window.scrollY > 420);
+}
+
+function atualizarEstadoSidebar() {
+  const menuVisivel = !document.body.classList.contains("sidebar-hidden");
+
+  botaoSidebar.setAttribute("aria-expanded", String(menuVisivel));
+  botaoSidebar.setAttribute("aria-label", menuVisivel ? "Esconder menu" : "Mostrar menu");
+}
+
+function alternarSidebar() {
+  document.body.classList.toggle("sidebar-hidden");
+  atualizarEstadoSidebar();
+  atualizarMenuPorScroll();
+}
+
 function travarMenuNoClique(hash) {
   menuTravadoHash = hash;
   atualizarMenuAtivo(hash);
@@ -797,6 +849,21 @@ function abrirCardComTeclado(evento) {
   }
 }
 
+function abrirDetalheDoCarrossel(evento) {
+  if (evento.target.closest(".carousel-control-prev, .carousel-control-next, .carousel-indicators")) {
+    return;
+  }
+
+  const slide = evento.target.closest(".banner-slide[data-carousel-game]");
+
+  if (!slide) {
+    return;
+  }
+
+  evento.preventDefault();
+  abrirDetalheJogoPorTitulo(slide.dataset.carouselGame);
+}
+
 function configurarEventos() {
   formularioBusca.addEventListener("submit", (evento) => {
     evento.preventDefault();
@@ -810,6 +877,10 @@ function configurarEventos() {
     carregarProdutos();
   });
 
+  botaoSidebar.addEventListener("click", alternarSidebar);
+
+  carrosselHero.addEventListener("click", abrirDetalheDoCarrossel);
+
   linksMenu.forEach((link) => {
     link.addEventListener("click", () => {
       travarMenuNoClique(link.getAttribute("href"));
@@ -821,8 +892,20 @@ function configurarEventos() {
     atualizarMenuPorScroll();
   });
 
-  window.addEventListener("scroll", atualizarMenuPorScroll, { passive: true });
-  window.addEventListener("resize", atualizarMenuPorScroll);
+  window.addEventListener("scroll", () => {
+    atualizarMenuPorScroll();
+    atualizarBotaoVoltarTopo();
+  }, { passive: true });
+
+  window.addEventListener("resize", () => {
+    atualizarMenuPorScroll();
+    atualizarBotaoVoltarTopo();
+  });
+
+  botaoVoltarTopo.addEventListener("click", () => {
+    travarMenuNoClique("#inicio");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  });
 
   listaProdutos.addEventListener("click", (evento) => {
     const botao = evento.target.closest("[data-favorite-id]");
@@ -863,6 +946,8 @@ function configurarEventos() {
 
 configurarEventos();
 atualizarMenuAtivo(window.location.hash || hashMenuPorScroll());
+atualizarEstadoSidebar();
+atualizarBotaoVoltarTopo();
 renderFavoritos();
 carregarProdutos();
 carregarPrecoForzaCarousel();
