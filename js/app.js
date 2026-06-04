@@ -747,6 +747,7 @@ function criarCardProduto(produto) {
 
   corpo.append(
     criarTitulo(produto.title),
+    criarCategoriaProduto(produto),
     criarLinhaPreco(produto),
     criarAcoesProduto(produto, favoritado),
   );
@@ -764,7 +765,7 @@ function criarCardFavorito(produto) {
   botaoRemover.dataset.favoriteId = produto.dealID;
   botaoRemover.textContent = "Remover dos favoritos";
 
-  corpo.append(criarTitulo(produto.title), criarLinhaPreco(produto), botaoRemover);
+  corpo.append(criarTitulo(produto.title), criarCategoriaProduto(produto), criarLinhaPreco(produto), botaoRemover);
 
   return card;
 }
@@ -795,6 +796,20 @@ function criarTitulo(titulo) {
   const elemento = document.createElement("h3");
   elemento.className = "game-title";
   elemento.textContent = titulo;
+  return elemento;
+}
+
+function criarCategoriaProduto(produto) {
+  const elemento = document.createElement("span");
+  const categorias = categoriasDoProduto(produto).map(nomeCategoria);
+  const categoriasVisiveis = categorias.slice(0, 2);
+  const complemento = categorias.length > categoriasVisiveis.length
+    ? ` +${categorias.length - categoriasVisiveis.length}`
+    : "";
+
+  elemento.className = "badge game-category";
+  elemento.textContent = `${categorias.length > 1 ? "Categorias" : "Categoria"}: ${categoriasVisiveis.join(", ")}${complemento}`;
+
   return elemento;
 }
 

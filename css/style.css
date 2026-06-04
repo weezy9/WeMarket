@@ -771,7 +771,7 @@ body.sidebar-hidden .sidebar-toggle {
 }
 
 .card-body {
-  min-height: 176px;
+  min-height: 204px;
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -785,6 +785,22 @@ body.sidebar-hidden .sidebar-toggle {
   font-size: .98rem;
   font-weight: 900;
   line-height: 1.35;
+}
+
+.game-category {
+  max-width: 100%;
+  align-self: flex-start;
+  padding: 6px 8px;
+  border: 1px solid rgba(var(--primary-rgb), .28);
+  border-radius: 999px;
+  background: rgba(var(--primary-rgb), .12);
+  color: #ffb6dc;
+  font-size: .7rem;
+  font-weight: 800;
+  line-height: 1.1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .price-row {
