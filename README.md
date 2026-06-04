@@ -4,8 +4,6 @@ Catalogo interativo de jogos desenvolvido como projeto front-end. A aplicacao li
 
 ## Integrantes do Grupo
 
-> Preencha esta secao antes da entrega com o RA e o nome completo de todos os integrantes.
-
 | RA | Nome completo |
 | --- | --- |
 | 823115360 | Alissa Novais Wenceslau Ferreira |
