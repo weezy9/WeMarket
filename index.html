@@ -27,19 +27,107 @@
 
       <section class="category-list" aria-labelledby="categorias-titulo">
         <h2 id="categorias-titulo">Categorias</h2>
-        <ul>
-          <li>Ação</li>
-          <li>Aventura</li>
-          <li>RPG</li>
-          <li>Estratégia</li>
-          <li>Esportes</li>
+        <ul id="menuCategorias">
+          <li>
+            <button class="category-button active" type="button" data-category="todos" aria-pressed="true">
+              <span><i class="bi bi-grid-3x3-gap" aria-hidden="true"></i>Todos</span>
+              <small data-category-count>0</small>
+            </button>
+          </li>
+          <li>
+            <button class="category-button" type="button" data-category="acao" aria-pressed="false">
+              <span><i class="bi bi-crosshair" aria-hidden="true"></i>Ação</span>
+              <small data-category-count>0</small>
+            </button>
+          </li>
+          <li>
+            <button class="category-button" type="button" data-category="aventura" aria-pressed="false">
+              <span><i class="bi bi-compass" aria-hidden="true"></i>Aventura</span>
+              <small data-category-count>0</small>
+            </button>
+          </li>
+          <li>
+            <button class="category-button" type="button" data-category="rpg" aria-pressed="false">
+              <span><i class="bi bi-shield" aria-hidden="true"></i>RPG</span>
+              <small data-category-count>0</small>
+            </button>
+          </li>
+          <li>
+            <button class="category-button" type="button" data-category="estrategia" aria-pressed="false">
+              <span><i class="bi bi-diagram-3" aria-hidden="true"></i>Estratégia</span>
+              <small data-category-count>0</small>
+            </button>
+          </li>
+          <li>
+            <button class="category-button" type="button" data-category="corrida" aria-pressed="false">
+              <span><i class="bi bi-speedometer2" aria-hidden="true"></i>Corrida</span>
+              <small data-category-count>0</small>
+            </button>
+          </li>
+          <li>
+            <button class="category-button" type="button" data-category="esportes" aria-pressed="false">
+              <span><i class="bi bi-trophy" aria-hidden="true"></i>Esportes</span>
+              <small data-category-count>0</small>
+            </button>
+          </li>
+          <li>
+            <button class="category-button" type="button" data-category="terror" aria-pressed="false">
+              <span><i class="bi bi-moon-stars" aria-hidden="true"></i>Terror</span>
+              <small data-category-count>0</small>
+            </button>
+          </li>
+          <li>
+            <button class="category-button" type="button" data-category="puzzle" aria-pressed="false">
+              <span><i class="bi bi-puzzle" aria-hidden="true"></i>Puzzle</span>
+              <small data-category-count>0</small>
+            </button>
+          </li>
+          <li>
+            <button class="category-button" type="button" data-category="outros" aria-pressed="false">
+              <span><i class="bi bi-three-dots" aria-hidden="true"></i>Outros</span>
+              <small data-category-count>0</small>
+            </button>
+          </li>
+          <li class="category-more-item dropdown">
+            <button id="maisCategoriasToggle" class="category-button dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+              <span><i class="bi bi-plus-circle" aria-hidden="true"></i>Mais categorias</span>
+            </button>
+            <ul id="maisCategoriasMenu" class="dropdown-menu dropdown-menu-dark category-more-menu">
+              <li>
+                <button class="dropdown-item" type="button" data-category="aventura" aria-pressed="false">
+                  <span><i class="bi bi-compass me-2" aria-hidden="true"></i>Aventura</span>
+                  <small data-category-count>0</small>
+                </button>
+              </li>
+              <li>
+                <button class="dropdown-item" type="button" data-category="estrategia" aria-pressed="false">
+                  <span><i class="bi bi-diagram-3 me-2" aria-hidden="true"></i>Estratégia</span>
+                  <small data-category-count>0</small>
+                </button>
+              </li>
+              <li>
+                <button class="dropdown-item" type="button" data-category="terror" aria-pressed="false">
+                  <span><i class="bi bi-moon-stars me-2" aria-hidden="true"></i>Terror</span>
+                  <small data-category-count>0</small>
+                </button>
+              </li>
+              <li>
+                <button class="dropdown-item" type="button" data-category="puzzle" aria-pressed="false">
+                  <span><i class="bi bi-puzzle me-2" aria-hidden="true"></i>Puzzle</span>
+                  <small data-category-count>0</small>
+                </button>
+              </li>
+              <li>
+                <button class="dropdown-item" type="button" data-category="outros" aria-pressed="false">
+                  <span><i class="bi bi-three-dots me-2" aria-hidden="true"></i>Outros</span>
+                  <small data-category-count>0</small>
+                </button>
+              </li>
+            </ul>
+          </li>
         </ul>
       </section>
 
-      <a class="promo-box" href="#produtos">
-        <strong>Ofertas da semana</strong>
-        <span>Confira os melhores descontos</span>
-      </a>
     </aside>
 
     <main id="inicio" class="content">
@@ -85,26 +173,26 @@
           </div>
 
           <div class="dropdown">
-            <button class="btn profile-toggle dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-              <img src="images/playerone.svg" class="avatar rounded-circle" alt="Foto de PlayerOne" />
-              <span>PlayerOne</span>
+            <button id="profileToggle" class="btn profile-toggle dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+              <img id="profileAvatar" src="images/playerone.svg" class="avatar rounded-circle" alt="Foto de PlayerOne" />
+              <span id="profileName">PlayerOne</span>
             </button>
             <div class="dropdown-menu dropdown-menu-dark dropdown-menu-end profile-menu">
               <div class="profile-card">
                 <div class="d-flex align-items-center gap-3">
-                  <img src="images/playerone.svg" class="avatar avatar-lg rounded-circle" alt="" />
+                  <img id="profileMenuAvatar" src="images/playerone.svg" class="avatar avatar-lg rounded-circle" alt="" />
                   <div>
-                    <strong>PlayerOne</strong>
-                    <span class="d-flex align-items-center gap-2 text-secondary small">
-                      <span class="status-dot bg-success rounded-circle" aria-hidden="true"></span>
-                      Jogador ativo
+                    <strong id="profileMenuName">PlayerOne</strong>
+                    <span id="profileStatus" class="d-flex align-items-center gap-2 text-secondary small">
+                      <span id="profileStatusDot" class="status-dot bg-success rounded-circle" aria-hidden="true"></span>
+                      <span id="profileStatusText">Jogador ativo</span>
                     </span>
                   </div>
                 </div>
                 <hr class="dropdown-divider" />
                 <a class="dropdown-item" href="#favoritos"><i class="bi bi-star me-2"></i>Favoritos</a>
                 <a class="dropdown-item" href="#produtos"><i class="bi bi-controller me-2"></i>Loja</a>
-                <button class="dropdown-item" type="button"><i class="bi bi-box-arrow-right me-2"></i>Sair</button>
+                <button id="profileLogout" class="dropdown-item" type="button"><i class="bi bi-box-arrow-right me-2"></i>Sair</button>
               </div>
             </div>
           </div>
@@ -197,6 +285,15 @@
   <button id="scrollTopButton" class="btn scroll-top-button" type="button" aria-label="Voltar ao topo">
     <i class="bi bi-arrow-up" aria-hidden="true"></i>
   </button>
+
+  <div class="toast-container position-fixed bottom-0 end-0 p-3">
+    <div id="profileToast" class="toast text-bg-dark border-0" role="status" aria-live="polite" aria-atomic="true">
+      <div class="d-flex">
+        <div id="profileToastBody" class="toast-body">Você saiu da conta.</div>
+        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Fechar"></button>
+      </div>
+    </div>
+  </div>
 
   <div class="modal fade game-detail-modal" id="gameDetailModal" tabindex="-1" aria-labelledby="gameDetailTitle" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-xl">
