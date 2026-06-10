@@ -1,26 +1,20 @@
 const SEARCH_DEBOUNCE_MS = 350;
-const COTACAO_DOLAR_REAL = 5;
-const MAX_REQUISICOES_CATEGORIA = 24;
 
 const listaProdutos = document.getElementById("listaProdutos");
 const listaFavoritos = document.getElementById("listaFavoritos");
 const statusProdutos = document.getElementById("statusProdutos");
 const contadorProdutos = document.getElementById("contadorProdutos");
 const contadorFavoritos = document.getElementById("contadorFavoritos");
-const precoForzaCarousel = document.getElementById("forzaCarouselPrice");
 const carregarMais = document.getElementById("carregarMais");
 const botaoVoltarTopo = document.getElementById("scrollTopButton");
 const botaoSidebar = document.getElementById("sidebarToggle");
 const busca = document.getElementById("busca");
 const formularioBusca = document.querySelector(".search-form");
 const linksMenu = document.querySelectorAll(".menu a[href^='#']");
-const botoesCategoria = document.querySelectorAll("[data-category]");
-const botaoMaisCategorias = document.getElementById("maisCategoriasToggle");
-const categoriasMais = new Set(
-  [...document.querySelectorAll("#maisCategoriasMenu [data-category]")]
-    .map((botao) => botao.dataset.category)
-);
+const menuCategorias = document.getElementById("menuCategorias");
 const carrosselHero = document.getElementById("heroCarousel");
+const heroIndicators = document.getElementById("heroIndicators");
+const heroSlides = document.getElementById("heroSlides");
 const secoesMenu = [...linksMenu]
   .map((link) => ({
     hash: link.getAttribute("href"),
@@ -31,17 +25,17 @@ const detalheModal = document.getElementById("gameDetailModal");
 const detalheBackdrop = document.getElementById("gameDetailBackdrop");
 const detalheImagem = document.getElementById("gameDetailImage");
 const detalheDesconto = document.getElementById("gameDetailDiscount");
-const detalheLoja = document.getElementById("gameDetailStore");
+const detalheCategoria = document.getElementById("gameDetailStore");
 const detalheTitulo = document.getElementById("gameDetailTitle");
 const detalheSubtitulo = document.getElementById("gameDetailSubtitle");
 const detalhePreco = document.getElementById("gameDetailPrice");
 const detalhePrecoAntigo = document.getElementById("gameDetailOldPrice");
-const detalheSteam = document.getElementById("gameDetailSteam");
-const detalheMetacritic = document.getElementById("gameDetailMetacritic");
-const detalheAvaliacaoOferta = document.getElementById("gameDetailRating");
-const detalheLancamento = document.getElementById("gameDetailRelease");
+const detalheMarca = document.getElementById("productDetailBrand");
+const detalheEstoque = document.getElementById("productDetailStock");
+const detalheAvaliacao = document.getElementById("productDetailRating");
+const detalheStatus = document.getElementById("productDetailStatus");
 const detalheFavorito = document.getElementById("gameDetailFavorite");
-const detalheOferta = document.getElementById("gameDetailDeal");
+const detalheApi = document.getElementById("gameDetailDeal");
 const perfilToggle = document.getElementById("profileToggle");
 const perfilAvatar = document.getElementById("profileAvatar");
 const perfilMenuAvatar = document.getElementById("profileMenuAvatar");
@@ -57,10 +51,13 @@ let produtos = [];
 let produtosGerais = [];
 let resultadosBusca = [];
 let produtosPorCategoria = new Map();
-let favoritos = mesclarProdutosUnicos([], WeGamesStorage.carregarFavoritos().filter(produtoValido));
-let tamanhoInicialCategoria = 0;
-let paginaGeral = 0;
-let paginaBusca = 0;
+let favoritos = mesclarProdutosUnicos([], WeMarketStorage.carregarFavoritos().filter(produtoValido));
+let categoriasProdutos = [];
+let totaisCategorias = new Map();
+let totalGeral = 0;
+let totalBusca = 0;
+let skipGeral = 0;
+let skipBusca = 0;
 let termoBuscaAtual = "";
 let temporizadorBusca = null;
 let carregandoProdutos = false;
@@ -73,106 +70,57 @@ let modalDetalhe = null;
 let menuScrollPendente = false;
 let menuTravadoHash = "";
 let temporizadorMenuTravado = null;
-let jogoForzaCarousel = null;
 let categoriaAtual = "todos";
 let perfilLogado = true;
+let carrosselIds = "";
 
-const formatadorMoeda = new Intl.NumberFormat("pt-BR", {
+const formatadorMoeda = new Intl.NumberFormat("en-US", {
   style: "currency",
-  currency: "BRL",
+  currency: "USD",
 });
 
-const categoriasJogos = [
-  { id: "todos", nome: "Todos" },
-  {
-    id: "acao",
-    nome: "Ação",
-    termos: [
-      "action", "shooter", "shoot", "battle", "combat", "fighter", "fighting",
-      "war", "sniper", "gun", "guns", "zombie", "doom", "halo",
-      "battlefield", "call of duty", "mortal kombat", "street fighter",
-      "tekken", "crime", "cyberpunk",
-    ],
-    buscas: ["war", "battle", "combat", "shooter", "sniper", "zombie", "doom", "fighter", "crime", "cyberpunk"],
-  },
-  {
-    id: "aventura",
-    nome: "Aventura",
-    termos: [
-      "adventure", "quest", "journey", "explorer", "explore", "tomb raider",
-      "uncharted", "life is strange", "lego", "hogwarts", "star wars",
-      "stray", "minecraft",
-    ],
-    buscas: ["adventure", "quest", "journey", "explorer", "lego", "star wars", "hogwarts", "tomb raider", "stray", "minecraft"],
-  },
-  {
-    id: "rpg",
-    nome: "RPG",
-    termos: [
-      "rpg", "roleplaying", "role-playing", "fantasy", "dragon", "final fantasy", "dragon age",
-      "dragon quest", "elder scrolls", "skyrim", "fallout", "witcher",
-      "diablo", "persona", "mass effect", "monster hunter", "souls",
-      "elden ring", "cyberpunk", "hogwarts",
-    ],
-    buscas: ["rpg", "fantasy", "dragon", "skyrim", "fallout", "witcher", "diablo", "persona", "souls", "elden"],
-  },
-  {
-    id: "estrategia",
-    nome: "Estratégia",
-    termos: [
-      "strategy", "strategic", "tactical", "tactics", "civilization",
-      "age of empires", "total war", "xcom", "command", "empire",
-      "cities", "tycoon", "management", "tower defense", "chess",
-      "simulator", "builder", "tower",
-    ],
-    buscas: ["strategy", "tactics", "empire", "civilization", "war", "cities", "tycoon", "simulator", "tower", "chess"],
-  },
-  {
-    id: "corrida",
-    nome: "Corrida",
-    termos: [
-      "racing", "race", "racer", "forza", "motorsport", "speed", "need for speed",
-      "dirt", "grid", "rally", "f1", "nascar", "moto", "motogp",
-      "ride", "carx",
-    ],
-    buscas: ["racing", "race", "forza", "motorsport", "speed", "rally", "dirt", "grid", "f1", "moto"],
-  },
-  {
-    id: "esportes",
-    nome: "Esportes",
-    termos: [
-      "sports", "football", "soccer", "fifa", "ea sports fc", "efootball",
-      "nba", "basketball", "tennis", "golf", "hockey", "skate",
-      "wwe", "ufc", "cricket", "baseball", "mlb",
-    ],
-    buscas: ["sports", "football", "soccer", "fifa", "nba", "tennis", "golf", "hockey", "skate", "ufc"],
-  },
-  {
-    id: "terror",
-    nome: "Terror",
-    termos: [
-      "horror", "terror", "fear", "f.e.a.r", "resident evil", "silent hill",
-      "outlast", "amnesia", "dead space", "evil within", "nightmare",
-      "phasmophobia", "alien isolation", "alien", "darkwood", "visage", "evil",
-    ],
-    buscas: ["horror", "fear", "resident evil", "dead space", "outlast", "amnesia", "silent hill", "nightmare", "alien", "evil"],
-  },
-  {
-    id: "puzzle",
-    nome: "Puzzle",
-    termos: [
-      "puzzle", "portal", "tetris", "arkanoid", "escape", "mahjong",
-      "hidden object", "mystery", "sudoku", "the witness",
-    ],
-    buscas: ["puzzle", "portal", "tetris", "escape", "mahjong", "mystery", "sudoku", "hidden object", "witness"],
-  },
-  { id: "outros", nome: "Outros" },
-];
+const metadadosCategorias = new Map([
+  ["beauty", { icone: "bi-stars" }],
+  ["fragrances", { icone: "bi-flower1" }],
+  ["furniture", { icone: "bi-house" }],
+  ["groceries", { icone: "bi-basket" }],
+  ["home-decoration", { icone: "bi-lamp" }],
+  ["kitchen-accessories", { icone: "bi-cup-hot" }],
+  ["laptops", { icone: "bi-laptop" }],
+  ["mens-shirts", { icone: "bi-person-standing" }],
+  ["mens-shoes", { icone: "bi-backpack" }],
+  ["mens-watches", { icone: "bi-watch" }],
+  ["mobile-accessories", { icone: "bi-phone" }],
+  ["motorcycle", { icone: "bi-bicycle" }],
+  ["skin-care", { icone: "bi-droplet" }],
+  ["smartphones", { icone: "bi-phone-fill" }],
+  ["sports-accessories", { icone: "bi-trophy" }],
+  ["sunglasses", { icone: "bi-sunglasses" }],
+  ["tablets", { icone: "bi-tablet" }],
+  ["tops", { icone: "bi-person" }],
+  ["vehicle", { icone: "bi-car-front" }],
+  ["womens-bags", { icone: "bi-bag" }],
+  ["womens-dresses", { icone: "bi-person-standing-dress" }],
+  ["womens-jewellery", { icone: "bi-gem" }],
+  ["womens-shoes", { icone: "bi-backpack2" }],
+  ["womens-watches", { icone: "bi-watch" }],
+]);
 
-const categoriasPorId = new Map(categoriasJogos.map((categoria) => [categoria.id, categoria]));
+categoriasProdutos = categoriasIniciais();
+
+function categoriasIniciais() {
+  return [
+    { id: "todos", nome: "All", icone: "bi-grid-3x3-gap" },
+    ...[...metadadosCategorias.entries()].map(([id, dados]) => ({
+      id,
+      nome: formatarSlugCategoria(id),
+      icone: dados.icone,
+    })),
+  ];
+}
 
 function produtoValido(produto) {
-  return produto && typeof produto.dealID === "string" && typeof produto.title === "string";
+  return produto && produto.id !== undefined && typeof produto.title === "string";
 }
 
 function normalizarTexto(texto) {
@@ -182,50 +130,50 @@ function normalizarTexto(texto) {
     .toLowerCase();
 }
 
-function textoCategoriaProduto(produto) {
-  return normalizarTexto(`${produto.title} ${produto.internalName || ""}`);
+function formatarSlugCategoria(slug) {
+  return String(slug || "")
+    .split("-")
+    .filter(Boolean)
+    .map((parte) => parte.charAt(0).toUpperCase() + parte.slice(1))
+    .join(" ");
 }
 
-function produtoCombinaCategoria(produto, categoria) {
-  const texto = textoCategoriaProduto(produto);
-  return categoria.termos?.some((termo) => texto.includes(termo)) || false;
+function normalizarCategoriaApi(categoria) {
+  const id = typeof categoria === "string" ? categoria : categoria.slug;
+  const nomeApi = typeof categoria === "string" ? "" : categoria.name;
+  const metadados = metadadosCategorias.get(id);
+
+  return {
+    id,
+    nome: nomeApi || formatarSlugCategoria(id),
+    icone: metadados?.icone || "bi-tag",
+  };
 }
 
-function categoriasDoProduto(produto) {
-  const categoriasEncontradas = categoriasJogos
-    .filter((categoria) => categoria.termos && produtoCombinaCategoria(produto, categoria))
-    .map((categoria) => categoria.id);
-
-  return categoriasEncontradas.length > 0 ? categoriasEncontradas : ["outros"];
-}
-
-function produtoNaCategoria(produto, categoriaId) {
-  if (categoriaId === "todos") {
-    return true;
-  }
-
-  return categoriasDoProduto(produto).includes(categoriaId);
+function categoriaDoProduto(produto) {
+  return produto.category || "uncategorized";
 }
 
 function nomeCategoria(categoriaId) {
-  return categoriasPorId.get(categoriaId)?.nome || "categoria";
+  if (categoriaId === "todos") {
+    return "All";
+  }
+
+  return categoriasProdutos.find((categoria) => categoria.id === categoriaId)?.nome
+    || formatarSlugCategoria(categoriaId)
+    || "Category";
 }
 
 function emCategoriaSemBusca() {
   return categoriaAtual !== "todos" && !termoBuscaAtual;
 }
 
-function tamanhoLoteCategoria() {
-  return tamanhoInicialCategoria || produtosGerais.length || 60;
-}
-
 function estadoCategoria(categoriaId) {
   if (!produtosPorCategoria.has(categoriaId)) {
     produtosPorCategoria.set(categoriaId, {
       produtos: [],
-      alvo: 0,
-      paginasPorConsulta: new Map(),
-      consultasFinalizadas: new Set(),
+      skip: 0,
+      total: 0,
       chegouAoFim: false,
     });
   }
@@ -233,152 +181,80 @@ function estadoCategoria(categoriaId) {
   return produtosPorCategoria.get(categoriaId);
 }
 
-function consultasCategoria(categoriaId) {
-  const categoria = categoriasPorId.get(categoriaId);
-
-  if (!categoria || categoriaId === "outros") {
-    return [""];
-  }
-
-  return categoria.buscas || categoria.termos || [""];
-}
-
-function categoriaChegouAoFim(estado, categoriaId) {
-  return consultasCategoria(categoriaId).every((consulta) => estado.consultasFinalizadas.has(consulta));
-}
-
-function produtosCategoriaVisiveis(categoriaId) {
-  const estado = estadoCategoria(categoriaId);
-  return estado.produtos.slice(0, estado.alvo || tamanhoLoteCategoria());
-}
-
 function produtosCategoriasCarregados() {
   return [...produtosPorCategoria.values()].flatMap((estado) => estado.produtos);
 }
 
-function contagemCategoriaMenu(categoriaId, contagensBase) {
-  if (categoriaId === "todos") {
-    return termoBuscaAtual ? resultadosBusca.length : produtosGerais.length;
-  }
-
-  if (termoBuscaAtual) {
-    return contagensBase.get(categoriaId) || 0;
-  }
-
-  const estado = produtosPorCategoria.get(categoriaId);
-
-  if (estado && estado.alvo > 0) {
-    const totalVisivel = produtosCategoriaVisiveis(categoriaId).length;
-    return totalVisivel > 0 || estado.chegouAoFim ? totalVisivel : estado.alvo;
-  }
-
-  return tamanhoLoteCategoria();
-}
-
-function listaBaseAtual() {
-  if (emCategoriaSemBusca()) {
-    return produtosCategoriaVisiveis(categoriaAtual);
-  }
-
-  return termoBuscaAtual ? resultadosBusca : produtosGerais;
-}
-
 function listaVisivelAtual() {
-  if (emCategoriaSemBusca()) {
-    return produtosCategoriaVisiveis(categoriaAtual);
-  }
-
   if (termoBuscaAtual) {
     return resultadosBusca;
   }
 
-  return aplicarFiltroCategoria(produtosGerais);
-}
+  if (emCategoriaSemBusca()) {
+    return estadoCategoria(categoriaAtual).produtos;
+  }
 
-function aplicarFiltroCategoria(lista) {
-  return categoriaAtual === "todos"
-    ? lista
-    : lista.filter((produto) => produtoNaCategoria(produto, categoriaAtual));
+  return produtosGerais;
 }
 
 function mesclarProdutosUnicos(produtosAtuais, novosProdutos) {
   const mapaProdutos = new Map();
 
-  [...produtosAtuais, ...novosProdutos].forEach((produto) => {
-    const chave = chaveProduto(produto);
-    const produtoExistente = mapaProdutos.get(chave);
-
-    mapaProdutos.set(chave, escolherMelhorOferta(produtoExistente, produto));
+  [...produtosAtuais, ...novosProdutos].filter(produtoValido).forEach((produto) => {
+    mapaProdutos.set(chaveProduto(produto), produto);
   });
 
   return [...mapaProdutos.values()];
 }
 
 function chaveProduto(produto) {
-  return produto.gameID ? String(produto.gameID) : produto.title.trim().toLowerCase().replace(/\s+/g, " ");
-}
-
-function escolherMelhorOferta(produtoAtual, novoProduto) {
-  if (!produtoAtual) {
-    return novoProduto;
-  }
-
-  const precoAtual = precoProduto(produtoAtual);
-  const novoPreco = precoProduto(novoProduto);
-
-  if (novoPreco < precoAtual) {
-    return novoProduto;
-  }
-
-  if (novoPreco === precoAtual && descontoProduto(novoProduto) > descontoProduto(produtoAtual)) {
-    return novoProduto;
-  }
-
-  return produtoAtual;
+  return String(produto.id);
 }
 
 function precoProduto(produto) {
-  const preco = Number(produto.salePrice);
-  return Number.isFinite(preco) ? preco : Number.POSITIVE_INFINITY;
+  const preco = Number(produto.price);
+  return Number.isFinite(preco) ? preco : 0;
 }
 
 function descontoProduto(produto) {
-  const desconto = Number(produto.savings);
+  const desconto = Number(produto.discountPercentage);
   return Number.isFinite(desconto) ? desconto : 0;
 }
 
-function steamAppId(produto) {
-  const id = String(produto.steamAppID || "").trim();
-  return id && id !== "0" ? id : "";
+function precoComDesconto(produto) {
+  const preco = precoProduto(produto);
+  const desconto = descontoProduto(produto);
+
+  return temDesconto(produto) ? preco * (1 - desconto / 100) : preco;
+}
+
+function temDesconto(produto) {
+  return precoProduto(produto) > 0 && descontoProduto(produto) >= 1;
 }
 
 function fontesImagemProduto(produto, tipo = "card") {
-  const id = steamAppId(produto);
   const fontes = [];
+  const imagens = Array.isArray(produto.images) ? produto.images : [];
 
-  if (id && tipo === "detalhe") {
-    fontes.push(`https://cdn.cloudflare.steamstatic.com/steam/apps/${id}/library_hero.jpg`);
-    fontes.push(`https://cdn.cloudflare.steamstatic.com/steam/apps/${id}/capsule_616x353.jpg`);
+  if (tipo === "detalhe") {
+    fontes.push(...imagens);
   }
 
-  if (id) {
-    fontes.push(`https://cdn.cloudflare.steamstatic.com/steam/apps/${id}/header.jpg`);
+  if (produto.thumbnail) {
+    fontes.push(produto.thumbnail);
   }
 
-  if (produto.thumb) {
-    fontes.push(produto.thumb);
-  }
+  fontes.push(...imagens);
+  fontes.push("images/WeMarket.png");
 
-  fontes.push("images/WeGames.png");
-
-  return [...new Set(fontes)];
+  return [...new Set(fontes.filter(Boolean))];
 }
 
 function carregarImagemComFallback(imagem, fontes, alt, aoTrocarFonte) {
   let indiceFonte = 0;
 
   function aplicarFonte() {
-    const fonte = fontes[indiceFonte] || "images/WeGames.png";
+    const fonte = fontes[indiceFonte] || "images/WeMarket.png";
 
     imagem.src = fonte;
     imagem.alt = alt;
@@ -397,128 +273,176 @@ function carregarImagemComFallback(imagem, fontes, alt, aoTrocarFonte) {
     }
 
     imagem.onerror = null;
-    imagem.src = "images/WeGames.png";
-    imagem.alt = "Capa indisponível";
+    imagem.src = "images/WeMarket.png";
+    imagem.alt = "Image unavailable";
   };
 
   aplicarFonte();
 }
 
-async function buscarProximaPaginaCategoria(categoriaId, estado, signal) {
-  const consultas = consultasCategoria(categoriaId);
-  const consulta = consultas.find((item) => !estado.consultasFinalizadas.has(item));
-
-  if (consulta === undefined) {
-    estado.chegouAoFim = true;
-    return;
-  }
-
-  const pagina = estado.paginasPorConsulta.get(consulta) || 0;
-  const resposta = await WeGamesAPI.buscarJogos({
-    pagina,
-    termo: consulta,
-    signal,
-  });
-  const produtosValidos = resposta.produtos
-    .filter(produtoValido)
-    .filter((produto) => produtoNaCategoria(produto, categoriaId));
-
-  estado.paginasPorConsulta.set(consulta, pagina + 1);
-  estado.produtos = mesclarProdutosUnicos(estado.produtos, produtosValidos);
-
-  if (resposta.chegouAoFim) {
-    estado.consultasFinalizadas.add(consulta);
-  }
-
-  estado.chegouAoFim = categoriaChegouAoFim(estado, categoriaId);
-}
-
-async function carregarProdutosCategoria({ novaBusca = false } = {}) {
-  const categoriaId = categoriaAtual;
-  const estado = estadoCategoria(categoriaId);
-  const lote = tamanhoLoteCategoria();
-
-  estado.alvo = novaBusca
-    ? Math.max(estado.alvo, lote)
-    : estado.alvo + lote;
-
-  if ((!novaBusca && carregandoProdutos) || estado.produtos.length >= estado.alvo || estado.chegouAoFim) {
-    produtos = listaVisivelAtual();
-    renderProdutos(produtos);
-    return;
-  }
-
-  if (controladorProdutos) {
-    controladorProdutos.abort();
-  }
-
-  const idRequisicao = requisicaoAtual + 1;
-  requisicaoAtual = idRequisicao;
-  controladorProdutos = new AbortController();
-  carregandoProdutos = true;
-  atualizarBotaoCarregarMais();
-
-  if (estado.produtos.length === 0) {
-    definirStatus(`Carregando jogos de ${nomeCategoria(categoriaId)}...`);
-  }
+async function carregarCategorias() {
+  montarMenuCategorias();
 
   try {
-    let requisicoes = 0;
+    const categoriasApi = await WeMarketAPI.buscarCategorias();
+    const categoriasNormalizadas = categoriasApi
+      .map(normalizarCategoriaApi)
+      .filter((categoria) => categoria.id);
 
-    while (
-      estado.produtos.length < estado.alvo
-      && !estado.chegouAoFim
-      && requisicoes < MAX_REQUISICOES_CATEGORIA
-    ) {
-      await buscarProximaPaginaCategoria(categoriaId, estado, controladorProdutos.signal);
-      requisicoes += 1;
+    categoriasProdutos = [
+      { id: "todos", nome: "All", icone: "bi-grid-3x3-gap" },
+      ...categoriasNormalizadas,
+    ];
 
-      if (idRequisicao !== requisicaoAtual) {
-        return;
-      }
-    }
-
-    produtos = listaVisivelAtual();
-    renderProdutos(produtos);
-    renderFavoritos();
-    atualizarPrecoForzaCarousel();
+    montarMenuCategorias();
+    atualizarCategorias();
+    carregarTotaisCategorias(categoriasNormalizadas);
   } catch (erro) {
-    if (erro.name === "AbortError") {
+    console.error(erro);
+  }
+}
+
+async function carregarTotaisCategorias(categorias) {
+  const resultados = await Promise.allSettled(
+    categorias.map(async (categoria) => ({
+      id: categoria.id,
+      total: await WeMarketAPI.buscarTotalCategoria(categoria.id),
+    })),
+  );
+
+  resultados.forEach((resultado) => {
+    if (resultado.status !== "fulfilled") {
+      console.error(resultado.reason);
       return;
     }
 
-    definirStatus(
-      estado.produtos.length === 0
-        ? `Não foi possível carregar jogos de ${nomeCategoria(categoriaId)} agora.`
-        : "Não foi possível carregar mais jogos agora. Tente novamente em alguns instantes.",
-      true,
-    );
-    console.error(erro);
-  } finally {
-    if (idRequisicao === requisicaoAtual) {
-      carregandoProdutos = false;
-      controladorProdutos = null;
-      atualizarBotaoCarregarMais();
-    }
+    totaisCategorias.set(resultado.value.id, resultado.value.total);
+  });
+
+  atualizarCategorias();
+}
+
+function montarMenuCategorias() {
+  const categoriasDiretas = categoriasProdutos.slice(0, 6);
+  const categoriasExtras = categoriasProdutos.slice(6);
+  const fragmento = document.createDocumentFragment();
+
+  categoriasDiretas.forEach((categoria) => {
+    const item = document.createElement("li");
+
+    item.appendChild(criarBotaoCategoria(categoria, "category-button"));
+    fragmento.appendChild(item);
+  });
+
+  if (categoriasExtras.length > 0) {
+    const itemMais = document.createElement("li");
+    const botaoMais = document.createElement("button");
+    const iconeMais = document.createElement("i");
+    const textoMais = document.createElement("span");
+    const menuMais = document.createElement("ul");
+    const itemListaMais = document.createElement("li");
+    const listaMais = document.createElement("ul");
+
+    itemMais.className = "category-more-item dropdown";
+
+    botaoMais.id = "maisCategoriasToggle";
+    botaoMais.className = "category-button dropdown-toggle";
+    botaoMais.type = "button";
+    botaoMais.setAttribute("data-bs-toggle", "dropdown");
+    botaoMais.setAttribute("data-bs-display", "static");
+    botaoMais.setAttribute("aria-expanded", "false");
+
+    iconeMais.className = "bi bi-plus-circle";
+    iconeMais.setAttribute("aria-hidden", "true");
+    textoMais.append(iconeMais, document.createTextNode("More categories"));
+    botaoMais.appendChild(textoMais);
+
+    menuMais.id = "maisCategoriasMenu";
+    menuMais.className = "dropdown-menu dropdown-menu-dark category-more-menu";
+    itemListaMais.className = "category-more-scroll-shell";
+    listaMais.className = "category-more-scroll";
+
+    categoriasExtras.forEach((categoria) => {
+      const item = document.createElement("li");
+
+      item.appendChild(criarBotaoCategoria(categoria, "dropdown-item"));
+      listaMais.appendChild(item);
+    });
+
+    itemListaMais.appendChild(listaMais);
+    menuMais.appendChild(itemListaMais);
+    itemMais.append(botaoMais, menuMais);
+    fragmento.appendChild(itemMais);
   }
+
+  menuCategorias.replaceChildren(fragmento);
+}
+
+function criarBotaoCategoria(categoria, classe) {
+  const botao = document.createElement("button");
+  const texto = document.createElement("span");
+  const icone = document.createElement("i");
+  const contador = document.createElement("small");
+
+  botao.className = classe;
+  botao.type = "button";
+  botao.dataset.category = categoria.id;
+  botao.setAttribute("aria-pressed", "false");
+
+  icone.className = `bi ${categoria.icone || "bi-tag"}`;
+  icone.setAttribute("aria-hidden", "true");
+  texto.append(icone, document.createTextNode(categoria.nome));
+
+  contador.dataset.categoryCount = "";
+  contador.textContent = "0";
+
+  botao.append(texto, contador);
+  return botao;
+}
+
+function contagemCategoriaMenu(categoriaId, contagensBase) {
+  if (categoriaId === "todos") {
+    if (termoBuscaAtual) {
+      return totalBusca || resultadosBusca.length;
+    }
+
+    return totalGeral || produtosGerais.length;
+  }
+
+  if (termoBuscaAtual) {
+    return contagensBase.get(categoriaId) || 0;
+  }
+
+  const estado = produtosPorCategoria.get(categoriaId);
+
+  if (estado?.total) {
+    return estado.total;
+  }
+
+  if (totaisCategorias.has(categoriaId)) {
+    return totaisCategorias.get(categoriaId);
+  }
+
+  return contagensBase.get(categoriaId) || 0;
 }
 
 async function carregarProdutos({ novaBusca = false } = {}) {
-  if (emCategoriaSemBusca()) {
-    await carregarProdutosCategoria({ novaBusca });
-    return;
-  }
-
-  const termo = termoBuscaAtual;
-  const emBusca = Boolean(termo);
-  const chegouAoFim = emBusca ? chegouAoFimBusca : chegouAoFimGeral;
-  const paginaAtual = emBusca ? paginaBusca : paginaGeral;
-  const produtosDoModo = emBusca ? resultadosBusca : produtosGerais;
+  const modoBusca = Boolean(termoBuscaAtual);
+  const modoCategoria = emCategoriaSemBusca();
+  const estadoAtual = modoCategoria ? estadoCategoria(categoriaAtual) : null;
+  const listaModo = modoBusca ? resultadosBusca : modoCategoria ? estadoAtual.produtos : produtosGerais;
+  const chegouAoFim = modoBusca ? chegouAoFimBusca : modoCategoria ? estadoAtual.chegouAoFim : chegouAoFimGeral;
 
   if ((!novaBusca && carregandoProdutos) || (!novaBusca && chegouAoFim)) {
     return;
   }
 
+  if (novaBusca && listaModo.length > 0 && (modoCategoria || !modoBusca)) {
+    produtos = listaVisivelAtual();
+    renderProdutos(produtos);
+    return;
+  }
+
   if (controladorProdutos) {
     controladorProdutos.abort();
   }
@@ -529,51 +453,53 @@ async function carregarProdutos({ novaBusca = false } = {}) {
   carregandoProdutos = true;
   atualizarBotaoCarregarMais();
 
-  if (produtosDoModo.length === 0) {
-    definirStatus(emBusca ? `Buscando "${termo}"...` : "Carregando ofertas...");
+  if (listaModo.length === 0) {
+    definirStatus(mensagemCarregandoProdutos());
   }
 
   try {
-    const resposta = await WeGamesAPI.buscarJogos({
-      pagina: paginaAtual,
-      termo,
+    const resposta = await WeMarketAPI.buscarProdutos({
+      skip: modoBusca ? skipBusca : modoCategoria ? estadoAtual.skip : skipGeral,
+      termo: termoBuscaAtual,
+      categoria: modoCategoria ? categoriaAtual : "",
       signal: controladorProdutos.signal,
     });
     const produtosValidos = resposta.produtos.filter(produtoValido);
-    const produtosUnicos = mesclarProdutosUnicos(produtosDoModo, produtosValidos);
 
     if (idRequisicao !== requisicaoAtual) {
       return;
     }
 
-    if (emBusca) {
-      resultadosBusca = produtosUnicos;
-      paginaBusca += 1;
+    if (modoBusca) {
+      resultadosBusca = mesclarProdutosUnicos(resultadosBusca, produtosValidos);
+      skipBusca = resposta.skip;
+      totalBusca = resposta.total;
       chegouAoFimBusca = resposta.chegouAoFim;
+    } else if (modoCategoria) {
+      estadoAtual.produtos = mesclarProdutosUnicos(estadoAtual.produtos, produtosValidos);
+      estadoAtual.skip = resposta.skip;
+      estadoAtual.total = resposta.total;
+      estadoAtual.chegouAoFim = resposta.chegouAoFim;
     } else {
-      produtosGerais = produtosUnicos;
-
-      if (tamanhoInicialCategoria === 0 && produtosGerais.length > 0) {
-        tamanhoInicialCategoria = produtosGerais.length;
-      }
-
-      paginaGeral += 1;
+      produtosGerais = mesclarProdutosUnicos(produtosGerais, produtosValidos);
+      skipGeral = resposta.skip;
+      totalGeral = resposta.total;
       chegouAoFimGeral = resposta.chegouAoFim;
+      renderCarrosselDestaques(produtosGerais);
     }
 
     produtos = listaVisivelAtual();
     renderProdutos(produtos);
     renderFavoritos();
-    atualizarPrecoForzaCarousel();
   } catch (erro) {
     if (erro.name === "AbortError") {
       return;
     }
 
     definirStatus(
-      produtosDoModo.length === 0
-        ? "Não foi possível carregar as ofertas. Tente novamente mais tarde."
-        : "Não foi possível carregar mais jogos agora. Tente novamente em alguns instantes.",
+      listaModo.length === 0
+        ? "Unable to load products. Please try again later."
+        : "Unable to load more products right now. Please try again shortly.",
       true,
     );
     console.error(erro);
@@ -584,6 +510,18 @@ async function carregarProdutos({ novaBusca = false } = {}) {
       atualizarBotaoCarregarMais();
     }
   }
+}
+
+function mensagemCarregandoProdutos() {
+  if (termoBuscaAtual) {
+    return `Searching for "${termoBuscaAtual}"...`;
+  }
+
+  if (emCategoriaSemBusca()) {
+    return `Loading products from ${nomeCategoria(categoriaAtual)}...`;
+  }
+
+  return "Loading products...";
 }
 
 function definirStatus(mensagem, erro = false) {
@@ -630,12 +568,13 @@ function renderProdutos(lista) {
 
 function renderFavoritos() {
   limparElemento(listaFavoritos);
-  contadorFavoritos.textContent = favoritos.length === 1 ? "1 favorito" : `${favoritos.length} favoritos`;
+  contadorFavoritos.textContent = favoritos.length === 1 ? "1 favorite" : `${favoritos.length} favorites`;
 
   if (favoritos.length === 0) {
     const vazio = document.createElement("p");
+
     vazio.className = "empty";
-    vazio.textContent = "Nenhum jogo favoritado ainda.";
+    vazio.textContent = "No favorite products yet.";
     listaFavoritos.appendChild(vazio);
     atualizarMenuPorScroll();
     return;
@@ -653,8 +592,8 @@ function renderFavoritos() {
 
 function formatarContadorBusca(total) {
   return total === 1
-    ? `1 resultado para "${termoBuscaAtual}"`
-    : `${total} resultados para "${termoBuscaAtual}"`;
+    ? `1 result for "${termoBuscaAtual}"`
+    : `${total} results for "${termoBuscaAtual}"`;
 }
 
 function formatarQuantidade(total, singular, plural) {
@@ -662,56 +601,41 @@ function formatarQuantidade(total, singular, plural) {
 }
 
 function formatarContadorProdutos(totalVisivel) {
-  if (termoBuscaAtual && categoriaAtual !== "todos") {
-    return `${formatarQuantidade(totalVisivel, "resultado", "resultados")} em ${nomeCategoria(categoriaAtual)} para "${termoBuscaAtual}"`;
-  }
-
   if (termoBuscaAtual) {
-    return formatarContadorBusca(totalVisivel);
+    return formatarContadorBusca(totalBusca || totalVisivel);
   }
 
   if (categoriaAtual !== "todos") {
-    return `${formatarQuantidade(totalVisivel, "jogo", "jogos")} em ${nomeCategoria(categoriaAtual)}`;
+    const totalCategoria = estadoCategoria(categoriaAtual).total || totalVisivel;
+    return `${totalVisivel} of ${totalCategoria} products in ${nomeCategoria(categoriaAtual)}`;
   }
 
-  return `${produtosGerais.length} jogos carregados`;
+  return `${produtosGerais.length} of ${totalGeral || produtosGerais.length} products loaded`;
 }
 
 function mensagemProdutosVazios() {
-  const chegouAoFim = emCategoriaSemBusca()
-    ? estadoCategoria(categoriaAtual).chegouAoFim
-    : termoBuscaAtual ? chegouAoFimBusca : chegouAoFimGeral;
-
-  if (termoBuscaAtual && categoriaAtual !== "todos") {
-    return `Nenhum jogo em ${nomeCategoria(categoriaAtual)} encontrado para "${termoBuscaAtual}".`;
-  }
-
   if (termoBuscaAtual) {
-    return `Nenhum jogo encontrado para "${termoBuscaAtual}".`;
+    return `No products found for "${termoBuscaAtual}".`;
   }
 
   if (categoriaAtual !== "todos") {
-    return chegouAoFim
-      ? `Nenhum jogo em ${nomeCategoria(categoriaAtual)} apareceu nos jogos carregados.`
-      : `Nenhum jogo em ${nomeCategoria(categoriaAtual)} apareceu nos jogos carregados. Tente carregar mais ofertas.`;
+    return `No products found in ${nomeCategoria(categoriaAtual)}.`;
   }
 
-  return "Nenhuma oferta disponível no momento.";
+  return "No products available right now.";
 }
 
 function atualizarCategorias() {
   const listaBase = termoBuscaAtual ? resultadosBusca : produtosGerais;
-  const contagens = new Map(categoriasJogos.map((categoria) => [categoria.id, 0]));
-
-  contagens.set("todos", listaBase.length);
+  const contagens = new Map(categoriasProdutos.map((categoria) => [categoria.id, 0]));
 
   listaBase.forEach((produto) => {
-    categoriasDoProduto(produto).forEach((categoriaId) => {
-      contagens.set(categoriaId, (contagens.get(categoriaId) || 0) + 1);
-    });
+    const categoriaId = categoriaDoProduto(produto);
+
+    contagens.set(categoriaId, (contagens.get(categoriaId) || 0) + 1);
   });
 
-  botoesCategoria.forEach((botao) => {
+  menuCategorias.querySelectorAll("[data-category]").forEach((botao) => {
     const categoriaId = botao.dataset.category;
     const total = contagemCategoriaMenu(categoriaId, contagens);
     const ativo = categoriaId === categoriaAtual;
@@ -725,8 +649,10 @@ function atualizarCategorias() {
     }
   });
 
+  const botaoMaisCategorias = document.getElementById("maisCategoriasToggle");
+
   if (botaoMaisCategorias) {
-    const ativoNoDropdown = categoriasMais.has(categoriaAtual);
+    const ativoNoDropdown = Boolean(menuCategorias.querySelector(`#maisCategoriasMenu [data-category="${categoriaAtual}"]`));
 
     botaoMaisCategorias.classList.toggle("active", ativoNoDropdown);
     botaoMaisCategorias.setAttribute("aria-pressed", String(ativoNoDropdown));
@@ -735,8 +661,10 @@ function atualizarCategorias() {
 
 function criarColunaCard(card) {
   const coluna = document.createElement("div");
+
   coluna.className = "col-12 col-sm-6 col-md-4 col-xl-3";
   coluna.appendChild(card);
+
   return coluna;
 }
 
@@ -762,8 +690,8 @@ function criarCardFavorito(produto) {
 
   botaoRemover.type = "button";
   botaoRemover.className = "btn btn-outline-danger btn-sm w-100 remove-favorite";
-  botaoRemover.dataset.favoriteId = produto.dealID;
-  botaoRemover.textContent = "Remover dos favoritos";
+  botaoRemover.dataset.favoriteId = produto.id;
+  botaoRemover.textContent = "Remove from favorites";
 
   corpo.append(criarTitulo(produto.title), criarCategoriaProduto(produto), criarLinhaPreco(produto), botaoRemover);
 
@@ -776,10 +704,10 @@ function criarBaseCard(produto) {
   const corpo = document.createElement("div");
 
   card.className = "card-game";
-  card.dataset.dealId = produto.dealID;
+  card.dataset.productId = produto.id;
   card.tabIndex = 0;
   card.setAttribute("role", "button");
-  card.setAttribute("aria-label", `Abrir detalhes de ${produto.title}`);
+  card.setAttribute("aria-label", `Open details for ${produto.title}`);
 
   imagem.className = "game-cover";
   imagem.loading = "lazy";
@@ -794,6 +722,7 @@ function criarBaseCard(produto) {
 
 function criarTitulo(titulo) {
   const elemento = document.createElement("h3");
+
   elemento.className = "game-title";
   elemento.textContent = titulo;
   return elemento;
@@ -801,14 +730,9 @@ function criarTitulo(titulo) {
 
 function criarCategoriaProduto(produto) {
   const elemento = document.createElement("span");
-  const categorias = categoriasDoProduto(produto).map(nomeCategoria);
-  const categoriasVisiveis = categorias.slice(0, 2);
-  const complemento = categorias.length > categoriasVisiveis.length
-    ? ` +${categorias.length - categoriasVisiveis.length}`
-    : "";
 
   elemento.className = "badge game-category";
-  elemento.textContent = `${categorias.length > 1 ? "Categorias" : "Categoria"}: ${categoriasVisiveis.join(", ")}${complemento}`;
+  elemento.textContent = `Category: ${nomeCategoria(categoriaDoProduto(produto))}`;
 
   return elemento;
 }
@@ -820,7 +744,7 @@ function criarLinhaPreco(produto) {
   linha.className = "price-row";
 
   preco.className = "price";
-  preco.textContent = formatarPreco(produto.salePrice);
+  preco.textContent = formatarPreco(precoComDesconto(produto));
 
   linha.append(preco);
 
@@ -828,7 +752,7 @@ function criarLinhaPreco(produto) {
     const precoAntigo = document.createElement("span");
 
     precoAntigo.className = "old-price";
-    precoAntigo.textContent = formatarPreco(produto.normalPrice);
+    precoAntigo.textContent = formatarPreco(precoProduto(produto));
     linha.appendChild(precoAntigo);
   }
 
@@ -839,14 +763,14 @@ function criarAcoesProduto(produto, favoritado) {
   const acoes = document.createElement("div");
   const desconto = document.createElement("span");
   const botoes = document.createElement("div");
-  const linkOferta = document.createElement("a");
+  const detalhes = document.createElement("button");
   const favorito = document.createElement("button");
 
   acoes.className = "game-actions";
 
   if (temDesconto(produto)) {
     desconto.className = "discount";
-    desconto.textContent = `-${Math.round(Number(produto.savings) || 0)}%`;
+    desconto.textContent = `-${Math.round(descontoProduto(produto))}%`;
   } else {
     desconto.className = "discount-placeholder";
     desconto.setAttribute("aria-hidden", "true");
@@ -854,84 +778,89 @@ function criarAcoesProduto(produto, favoritado) {
 
   botoes.className = "card-buttons";
 
-  linkOferta.className = "deal-link";
-  linkOferta.href = `https://www.cheapshark.com/redirect?dealID=${encodeURIComponent(produto.dealID)}`;
-  linkOferta.target = "_blank";
-  linkOferta.rel = "noopener noreferrer";
-  linkOferta.textContent = "Ver oferta";
+  detalhes.type = "button";
+  detalhes.className = "deal-link";
+  detalhes.dataset.detailId = produto.id;
+  detalhes.textContent = "Details";
 
   favorito.type = "button";
   favorito.className = `favorite${favoritado ? " active" : ""}`;
-  favorito.dataset.favoriteId = produto.dealID;
+  favorito.dataset.favoriteId = produto.id;
   favorito.setAttribute("aria-pressed", String(favoritado));
-  favorito.setAttribute("aria-label", favoritado ? `Remover ${produto.title} dos favoritos` : `Adicionar ${produto.title} aos favoritos`);
-  favorito.title = favoritado ? "Remover dos favoritos" : "Adicionar aos favoritos";
-  favorito.textContent = favoritado ? "★" : "☆";
+  favorito.setAttribute("aria-label", favoritado ? `Remove ${produto.title} from favorites` : `Add ${produto.title} to favorites`);
+  favorito.title = favoritado ? "Remove from favorites" : "Add to favorites";
+  favorito.innerHTML = favoritado
+    ? '<i class="bi bi-star-fill" aria-hidden="true"></i>'
+    : '<i class="bi bi-star" aria-hidden="true"></i>';
 
-  botoes.append(linkOferta, favorito);
+  botoes.append(detalhes, favorito);
   acoes.append(desconto, botoes);
 
   return acoes;
 }
 
 function formatarPreco(valor) {
-  return formatadorMoeda.format((Number(valor) || 0) * COTACAO_DOLAR_REAL);
+  return formatadorMoeda.format(Number(valor) || 0);
 }
 
-function encontrarForzaHorizon5(lista) {
-  return lista.find((produto) => produto.title.toLowerCase() === "forza horizon 5")
-    || lista.find((produto) => produto.title.toLowerCase().includes("forza horizon 5"));
-}
+function renderCarrosselDestaques(lista) {
+  const destaques = lista.filter((produto) => fontesImagemProduto(produto).length > 1).slice(0, 3);
+  const ids = destaques.map((produto) => produto.id).join("-");
 
-function atualizarPrecoForzaCarousel(jogoForza = null) {
-  if (!precoForzaCarousel) {
+  if (destaques.length === 0 || ids === carrosselIds) {
     return;
   }
 
-  if (jogoForza) {
-    jogoForzaCarousel = jogoForza;
-  }
+  carrosselIds = ids;
+  heroIndicators.replaceChildren();
+  heroSlides.replaceChildren();
 
-  const jogosCarregados = [...produtosGerais, ...resultadosBusca, ...produtosCategoriasCarregados()];
-  const forza = jogoForzaCarousel || encontrarForzaHorizon5(jogosCarregados);
+  destaques.forEach((produto, indice) => {
+    const indicador = document.createElement("button");
+    const item = document.createElement("div");
+    const slide = document.createElement("div");
+    const conteudo = document.createElement("div");
+    const badge = document.createElement("span");
+    const titulo = document.createElement("h1");
+    const descricao = document.createElement("p");
+    const preco = document.createElement("strong");
+    const botao = document.createElement("button");
+    const imagem = fontesImagemProduto(produto, "detalhe")[0];
 
-  if (forza) {
-    jogoForzaCarousel = forza;
-  }
+    indicador.type = "button";
+    indicador.dataset.bsTarget = "#heroCarousel";
+    indicador.dataset.bsSlideTo = String(indice);
+    indicador.setAttribute("aria-label", `Slide ${indice + 1}`);
 
-  precoForzaCarousel.textContent = forza
-    ? `Por apenas ${formatarPreco(forza.salePrice)}`
-    : precoForzaCarousel.textContent || "Carregando oferta...";
-}
+    if (indice === 0) {
+      indicador.className = "active";
+      indicador.setAttribute("aria-current", "true");
+    }
 
-async function carregarPrecoForzaCarousel() {
-  if (!precoForzaCarousel) {
-    return;
-  }
+    item.className = `carousel-item${indice === 0 ? " active" : ""}`;
+    slide.className = "banner-slide banner-slide-contain";
+    slide.dataset.productId = produto.id;
+    slide.style.setProperty("--banner-image", `url("${imagem}")`);
 
-  try {
-    const resposta = await WeGamesAPI.buscarJogos({ termo: "Forza Horizon 5" });
-    const jogoForza = encontrarForzaHorizon5(resposta.produtos.filter(produtoValido));
+    conteudo.className = "banner-content";
+    badge.className = "badge text-bg-primary";
+    badge.textContent = indice === 0 ? "Featured" : "Product";
+    titulo.textContent = produto.title;
+    descricao.textContent = produto.description || "Description unavailable.";
+    preco.className = "banner-price";
+    preco.textContent = `Only ${formatarPreco(precoComDesconto(produto))}`;
+    botao.className = "btn btn-primary";
+    botao.type = "button";
+    botao.textContent = "View details";
 
-    atualizarPrecoForzaCarousel(jogoForza);
-  } catch (erro) {
-    console.error(erro);
-  }
-}
+    conteudo.append(badge, titulo, descricao, preco, botao);
+    slide.appendChild(conteudo);
+    item.appendChild(slide);
+    heroIndicators.appendChild(indicador);
+    heroSlides.appendChild(item);
+  });
 
-function temDesconto(produto) {
-  const precoAtual = Number(produto.salePrice);
-  const precoNormal = Number(produto.normalPrice);
-  const desconto = Number(produto.savings);
-
-  return Number.isFinite(precoAtual)
-    && Number.isFinite(precoNormal)
-    && precoNormal > precoAtual
-    && desconto >= 1;
-}
-
-function abrirDetalheJogo(id) {
-  abrirDetalheProduto(encontrarProdutoPorId(id));
+  bootstrap.Carousel.getOrCreateInstance(carrosselHero).to(0);
 }
 
 function abrirDetalheProduto(produto) {
@@ -941,7 +870,7 @@ function abrirDetalheProduto(produto) {
     return;
   }
 
-  preencherDetalheJogo(produto);
+  preencherDetalheProduto(produto);
 
   if (!modalDetalhe) {
     modalDetalhe = new bootstrap.Modal(detalheModal);
@@ -950,54 +879,29 @@ function abrirDetalheProduto(produto) {
   modalDetalhe.show();
 }
 
-async function abrirDetalheJogoPorTitulo(titulo) {
-  const produtoLocal = encontrarProdutoPorTitulo(titulo);
-
-  if (produtoLocal) {
-    abrirDetalheProduto(produtoLocal);
-    return;
-  }
-
-  try {
-    const resposta = await WeGamesAPI.buscarJogos({ termo: titulo });
-    const produtosValidos = resposta.produtos.filter(produtoValido);
-    const produto = encontrarProdutoPorTitulo(titulo, produtosValidos) || produtosValidos[0];
-
-    abrirDetalheProduto(produto);
-  } catch (erro) {
-    console.error(erro);
-  }
-}
-
 function encontrarProdutoPorId(id) {
-  return produtos.find((produto) => produto.dealID === id)
-    || produtosGerais.find((produto) => produto.dealID === id)
-    || resultadosBusca.find((produto) => produto.dealID === id)
-    || produtosCategoriasCarregados().find((produto) => produto.dealID === id)
-    || favoritos.find((produto) => produto.dealID === id)
-    || (produtoEmDetalhe?.dealID === id ? produtoEmDetalhe : null);
+  const idProduto = String(id);
+
+  return produtos.find((produto) => String(produto.id) === idProduto)
+    || produtosGerais.find((produto) => String(produto.id) === idProduto)
+    || resultadosBusca.find((produto) => String(produto.id) === idProduto)
+    || produtosCategoriasCarregados().find((produto) => String(produto.id) === idProduto)
+    || favoritos.find((produto) => String(produto.id) === idProduto)
+    || (String(produtoEmDetalhe?.id) === idProduto ? produtoEmDetalhe : null);
 }
 
-function encontrarProdutoPorTitulo(
-  titulo,
-  lista = [...produtos, ...produtosGerais, ...resultadosBusca, ...produtosCategoriasCarregados(), ...favoritos, ...(jogoForzaCarousel ? [jogoForzaCarousel] : [])]
-) {
-  const tituloNormalizado = titulo.trim().toLowerCase();
-
-  return lista.find((produto) => produto.title.toLowerCase() === tituloNormalizado)
-    || lista.find((produto) => produto.title.toLowerCase().includes(tituloNormalizado));
-}
-
-function preencherDetalheJogo(produto) {
+function preencherDetalheProduto(produto) {
   const fontesImagem = fontesImagemProduto(produto, "detalhe");
 
   carregarImagemComFallback(detalheImagem, fontesImagem, produto.title, (fonte) => {
     detalheBackdrop.style.backgroundImage = `url("${fonte}")`;
   });
+
   detalheTitulo.textContent = produto.title;
-  detalheSubtitulo.textContent = criarResumoJogo(produto);
-  detalhePreco.textContent = formatarPreco(produto.salePrice);
-  detalheOferta.href = `https://www.cheapshark.com/redirect?dealID=${encodeURIComponent(produto.dealID)}`;
+  detalheSubtitulo.textContent = produto.description || "Description unavailable.";
+  detalhePreco.textContent = formatarPreco(precoComDesconto(produto));
+  detalheCategoria.textContent = nomeCategoria(categoriaDoProduto(produto));
+  detalheApi.href = `https://dummyjson.com/products/${encodeURIComponent(produto.id)}`;
 
   preencherDescontoDetalhe(produto);
   preencherPrecoAntigoDetalhe(produto);
@@ -1009,64 +913,25 @@ function preencherDescontoDetalhe(produto) {
   const produtoComDesconto = temDesconto(produto);
 
   detalheDesconto.hidden = !produtoComDesconto;
-  detalheLoja.hidden = !produtoComDesconto;
   detalheDesconto.textContent = produtoComDesconto
-    ? `-${Math.round(Number(produto.savings) || 0)}%`
+    ? `-${Math.round(descontoProduto(produto))}%`
     : "";
 }
 
 function preencherPrecoAntigoDetalhe(produto) {
   detalhePrecoAntigo.hidden = !temDesconto(produto);
-  detalhePrecoAntigo.textContent = temDesconto(produto) ? formatarPreco(produto.normalPrice) : "";
+  detalhePrecoAntigo.textContent = temDesconto(produto) ? formatarPreco(precoProduto(produto)) : "";
 }
 
 function preencherEstatisticasDetalhe(produto) {
-  detalheSteam.textContent = formatarAvaliacaoSteam(produto);
-  detalheMetacritic.textContent = formatarMetacritic(produto);
-  detalheAvaliacaoOferta.textContent = formatarAvaliacaoOferta(produto);
-  detalheLancamento.textContent = formatarDataLancamento(produto.releaseDate);
-}
-
-function criarResumoJogo(produto) {
-  if (produto.steamRatingText && produto.steamRatingText !== "0") {
-    return `Oferta com avaliação "${produto.steamRatingText}" na Steam.`;
-  }
-
-  return "Confira a melhor oferta encontrada para este jogo.";
-}
-
-function formatarAvaliacaoSteam(produto) {
-  const percentual = Number(produto.steamRatingPercent);
-
-  if (produto.steamRatingText && produto.steamRatingText !== "0" && Number.isFinite(percentual)) {
-    return `${produto.steamRatingText} (${percentual}%)`;
-  }
-
-  if (produto.steamRatingText && produto.steamRatingText !== "0") {
-    return produto.steamRatingText;
-  }
-
-  return "Sem avaliação";
-}
-
-function formatarMetacritic(produto) {
-  const nota = Number(produto.metacriticScore);
-  return Number.isFinite(nota) && nota > 0 ? `${nota}/100` : "Sem nota";
-}
-
-function formatarAvaliacaoOferta(produto) {
-  const nota = Number(produto.dealRating);
-  return Number.isFinite(nota) && nota > 0 ? `${nota.toFixed(1)}/10` : "Não informada";
-}
-
-function formatarDataLancamento(valor) {
-  const timestamp = Number(valor);
-
-  if (!Number.isFinite(timestamp) || timestamp <= 0) {
-    return "Não informado";
-  }
-
-  return new Intl.DateTimeFormat("pt-BR").format(new Date(timestamp * 1000));
+  detalheMarca.textContent = produto.brand || "No brand";
+  detalheEstoque.textContent = Number.isFinite(Number(produto.stock))
+    ? `${produto.stock} units`
+    : "Not informed";
+  detalheAvaliacao.textContent = Number.isFinite(Number(produto.rating))
+    ? `${Number(produto.rating).toFixed(1)}/5`
+    : "No rating";
+  detalheStatus.textContent = produto.availabilityStatus || "Not informed";
 }
 
 function atualizarFavoritoDetalhe(produto) {
@@ -1074,20 +939,23 @@ function atualizarFavoritoDetalhe(produto) {
   const icone = document.createElement("i");
 
   icone.className = `bi ${favoritado ? "bi-star-fill" : "bi-star"} me-2`;
-  detalheFavorito.dataset.favoriteId = produto.dealID;
+  detalheFavorito.dataset.favoriteId = produto.id;
   detalheFavorito.classList.toggle("active", favoritado);
   detalheFavorito.setAttribute("aria-pressed", String(favoritado));
-  detalheFavorito.replaceChildren(icone, document.createTextNode(favoritado ? "Favoritado" : "Favoritar"));
+  detalheFavorito.replaceChildren(icone, document.createTextNode(favoritado ? "Favorited" : "Add to favorites"));
 }
 
 function estaFavoritado(produto) {
-  const chave = typeof produto === "string" ? chaveFavoritoPorId(produto) : chaveProduto(produto);
+  const chave = typeof produto === "string" || typeof produto === "number"
+    ? String(produto)
+    : chaveProduto(produto);
+
   return favoritos.some((favorito) => chaveProduto(favorito) === chave);
 }
 
 function alternarFavorito(id) {
   const produto = encontrarProdutoPorId(id);
-  const chave = produto ? chaveProduto(produto) : chaveFavoritoPorId(id);
+  const chave = produto ? chaveProduto(produto) : String(id);
   const existe = favoritos.some((favorito) => chaveProduto(favorito) === chave);
 
   if (existe) {
@@ -1100,40 +968,36 @@ function alternarFavorito(id) {
     favoritos = [...favoritos, produto];
   }
 
-  WeGamesStorage.salvarFavoritos(favoritos);
+  WeMarketStorage.salvarFavoritos(favoritos);
   renderProdutos(produtos);
   renderFavoritos();
-}
 
-function chaveFavoritoPorId(id) {
-  const produto = produtos.find((item) => item.dealID === id)
-    || produtosCategoriasCarregados().find((item) => item.dealID === id)
-    || favoritos.find((item) => item.dealID === id);
-
-  return produto ? chaveProduto(produto) : id;
+  if (produtoEmDetalhe) {
+    atualizarFavoritoDetalhe(produtoEmDetalhe);
+  }
 }
 
 function textoBusca() {
-  return busca.value.trim().toLowerCase();
+  return busca.value.trim();
 }
 
 function prepararBusca() {
   const termo = textoBusca();
+  const termoNormalizado = normalizarTexto(termo);
 
   clearTimeout(temporizadorBusca);
   cancelarRequisicaoAtual();
 
-  if (!termo) {
+  if (!termoNormalizado) {
     termoBuscaAtual = "";
     resultadosBusca = [];
-    paginaBusca = 0;
+    skipBusca = 0;
+    totalBusca = 0;
     chegouAoFimBusca = true;
     produtos = listaVisivelAtual();
     renderProdutos(produtos);
 
-    if (emCategoriaSemBusca() && produtos.length === 0) {
-      carregarProdutos({ novaBusca: true });
-    } else if (produtosGerais.length === 0) {
+    if (produtosGerais.length === 0) {
       carregarProdutos();
     }
 
@@ -1143,14 +1007,15 @@ function prepararBusca() {
   categoriaAtual = "todos";
   termoBuscaAtual = termo;
   resultadosBusca = [];
-  paginaBusca = 0;
+  skipBusca = 0;
+  totalBusca = 0;
   chegouAoFimBusca = false;
-  produtos = listaVisivelAtual();
+  produtos = [];
 
   limparElemento(listaProdutos);
   atualizarCategorias();
-  contadorProdutos.textContent = `Buscando "${termo}"...`;
-  definirStatus(`Buscando "${termo}"...`);
+  contadorProdutos.textContent = `Searching for "${termo}"...`;
+  definirStatus(`Searching for "${termo}"...`);
   atualizarBotaoCarregarMais();
 
   temporizadorBusca = setTimeout(() => {
@@ -1168,7 +1033,8 @@ function limparBuscaParaCategoria() {
   busca.value = "";
   termoBuscaAtual = "";
   resultadosBusca = [];
-  paginaBusca = 0;
+  skipBusca = 0;
+  totalBusca = 0;
   chegouAoFimBusca = true;
 }
 
@@ -1183,34 +1049,26 @@ function cancelarRequisicaoAtual() {
 }
 
 function atualizarBotaoCarregarMais() {
-  if (emCategoriaSemBusca()) {
-    const estado = estadoCategoria(categoriaAtual);
-    const totalAtual = produtosCategoriaVisiveis(categoriaAtual).length;
-    const temMaisEmCache = estado.produtos.length > totalAtual;
-
-    carregarMais.hidden = totalAtual === 0
-      ? estado.chegouAoFim
-      : estado.chegouAoFim && !temMaisEmCache;
-    carregarMais.disabled = carregandoProdutos;
-    carregarMais.textContent = carregandoProdutos
-      ? "Carregando..."
-      : `Carregar mais jogos de ${nomeCategoria(categoriaAtual)}`;
-    return;
-  }
-
   const emBusca = Boolean(termoBuscaAtual);
-  const totalAtual = emBusca ? resultadosBusca.length : produtosGerais.length;
-  const chegouAoFim = emBusca ? chegouAoFimBusca : chegouAoFimGeral;
+  const emCategoria = emCategoriaSemBusca();
+  const totalAtual = emBusca
+    ? resultadosBusca.length
+    : emCategoria ? estadoCategoria(categoriaAtual).produtos.length : produtosGerais.length;
+  const chegouAoFim = emBusca
+    ? chegouAoFimBusca
+    : emCategoria ? estadoCategoria(categoriaAtual).chegouAoFim : chegouAoFimGeral;
 
   carregarMais.hidden = totalAtual === 0 || chegouAoFim;
   carregarMais.disabled = carregandoProdutos;
   carregarMais.textContent = carregandoProdutos
-    ? "Carregando..."
-    : emBusca ? "Carregar mais resultados" : "Carregar mais jogos";
+    ? "Loading..."
+    : emBusca ? "Load more results"
+      : emCategoria ? `Load more from ${nomeCategoria(categoriaAtual)}`
+        : "Load more products";
 }
 
 function selecionarCategoria(categoriaId) {
-  if (!categoriasPorId.has(categoriaId)) {
+  if (!categoriasProdutos.some((categoria) => categoria.id === categoriaId)) {
     return;
   }
 
@@ -1218,17 +1076,12 @@ function selecionarCategoria(categoriaId) {
   categoriaAtual = categoriaId;
   produtos = listaVisivelAtual();
 
-  if (emCategoriaSemBusca()) {
-    if (produtos.length > 0) {
-      renderProdutos(produtos);
-    } else {
-      limparElemento(listaProdutos);
-      atualizarCategorias();
-      contadorProdutos.textContent = `Carregando jogos de ${nomeCategoria(categoriaId)}...`;
-      definirStatus(`Carregando jogos de ${nomeCategoria(categoriaId)}...`);
-      atualizarBotaoCarregarMais();
-    }
-
+  if (categoriaAtual !== "todos" && produtos.length === 0) {
+    limparElemento(listaProdutos);
+    atualizarCategorias();
+    contadorProdutos.textContent = `Loading products from ${nomeCategoria(categoriaId)}...`;
+    definirStatus(`Loading products from ${nomeCategoria(categoriaId)}...`);
+    atualizarBotaoCarregarMais();
     carregarProdutos({ novaBusca: true });
   } else {
     renderProdutos(produtos);
@@ -1299,7 +1152,7 @@ function atualizarEstadoSidebar() {
   const menuVisivel = !document.body.classList.contains("sidebar-hidden");
 
   botaoSidebar.setAttribute("aria-expanded", String(menuVisivel));
-  botaoSidebar.setAttribute("aria-label", menuVisivel ? "Esconder menu" : "Mostrar menu");
+  botaoSidebar.setAttribute("aria-label", menuVisivel ? "Hide menu" : "Show menu");
 }
 
 function alternarSidebar() {
@@ -1311,17 +1164,17 @@ function alternarSidebar() {
 function atualizarPerfil({ logado }) {
   perfilLogado = logado;
 
-  perfilNome.textContent = logado ? "PlayerOne" : "Visitante";
-  perfilMenuNome.textContent = logado ? "PlayerOne" : "Visitante";
-  perfilStatusText.textContent = logado ? "Jogador ativo" : "Sessão encerrada";
-  perfilAvatar.alt = logado ? "Foto de PlayerOne" : "Foto de Visitante";
+  perfilNome.textContent = logado ? "ClientOne" : "Guest";
+  perfilMenuNome.textContent = logado ? "ClientOne" : "Guest";
+  perfilStatusText.textContent = logado ? "Active customer" : "Signed out";
+  perfilAvatar.alt = logado ? "ClientOne profile picture" : "Guest profile picture";
   perfilAvatar.classList.toggle("opacity-50", !logado);
   perfilMenuAvatar.classList.toggle("opacity-50", !logado);
   perfilStatusDot.classList.toggle("bg-success", logado);
   perfilStatusDot.classList.toggle("bg-secondary", !logado);
   perfilSair.innerHTML = logado
-    ? '<i class="bi bi-box-arrow-right me-2"></i>Sair'
-    : '<i class="bi bi-box-arrow-in-right me-2"></i>Entrar novamente';
+    ? '<i class="bi bi-box-arrow-right me-2"></i>Sign out'
+    : '<i class="bi bi-box-arrow-in-right me-2"></i>Sign in again';
 }
 
 function alternarPerfil() {
@@ -1329,8 +1182,8 @@ function alternarPerfil() {
 
   atualizarPerfil({ logado: novoEstadoLogado });
   perfilToastBody.textContent = novoEstadoLogado
-    ? "Você entrou novamente."
-    : "Você saiu da conta.";
+    ? "You signed in again."
+    : "You signed out.";
 
   bootstrap.Dropdown.getOrCreateInstance(perfilToggle).hide();
   bootstrap.Toast.getOrCreateInstance(perfilToast).show();
@@ -1356,10 +1209,10 @@ function abrirCardDoEvento(evento) {
     return;
   }
 
-  const card = evento.target.closest(".card-game[data-deal-id]");
+  const card = evento.target.closest(".card-game[data-product-id]");
 
   if (card) {
-    abrirDetalheJogo(card.dataset.dealId);
+    abrirDetalheProduto(encontrarProdutoPorId(card.dataset.productId));
   }
 }
 
@@ -1372,11 +1225,11 @@ function abrirCardComTeclado(evento) {
     return;
   }
 
-  const card = evento.target.closest(".card-game[data-deal-id]");
+  const card = evento.target.closest(".card-game[data-product-id]");
 
   if (card) {
     evento.preventDefault();
-    abrirDetalheJogo(card.dataset.dealId);
+    abrirDetalheProduto(encontrarProdutoPorId(card.dataset.productId));
   }
 }
 
@@ -1385,14 +1238,14 @@ function abrirDetalheDoCarrossel(evento) {
     return;
   }
 
-  const slide = evento.target.closest(".banner-slide[data-carousel-game]");
+  const slide = evento.target.closest(".banner-slide[data-product-id]");
 
   if (!slide) {
     return;
   }
 
   evento.preventDefault();
-  abrirDetalheJogoPorTitulo(slide.dataset.carouselGame);
+  abrirDetalheProduto(encontrarProdutoPorId(slide.dataset.productId));
 }
 
 function configurarEventos() {
@@ -1400,29 +1253,27 @@ function configurarEventos() {
     evento.preventDefault();
   });
 
-  busca.addEventListener("input", () => {
-    prepararBusca();
-  });
+  busca.addEventListener("input", prepararBusca);
 
   carregarMais.addEventListener("click", () => {
     carregarProdutos();
   });
 
   botaoSidebar.addEventListener("click", alternarSidebar);
-
   carrosselHero.addEventListener("click", abrirDetalheDoCarrossel);
-
   perfilSair.addEventListener("click", alternarPerfil);
+
+  menuCategorias.addEventListener("click", (evento) => {
+    const botao = evento.target.closest("[data-category]");
+
+    if (botao) {
+      selecionarCategoria(botao.dataset.category);
+    }
+  });
 
   linksMenu.forEach((link) => {
     link.addEventListener("click", () => {
       travarMenuNoClique(link.getAttribute("href"));
-    });
-  });
-
-  botoesCategoria.forEach((botao) => {
-    botao.addEventListener("click", () => {
-      selecionarCategoria(botao.dataset.category);
     });
   });
 
@@ -1447,10 +1298,16 @@ function configurarEventos() {
   });
 
   listaProdutos.addEventListener("click", (evento) => {
-    const botao = evento.target.closest("[data-favorite-id]");
+    const botaoDetalhe = evento.target.closest("[data-detail-id]");
+    const botaoFavorito = evento.target.closest("[data-favorite-id]");
 
-    if (botao) {
-      alternarFavorito(botao.dataset.favoriteId);
+    if (botaoDetalhe) {
+      abrirDetalheProduto(encontrarProdutoPorId(botaoDetalhe.dataset.detailId));
+      return;
+    }
+
+    if (botaoFavorito) {
+      alternarFavorito(botaoFavorito.dataset.favoriteId);
       return;
     }
 
@@ -1460,10 +1317,10 @@ function configurarEventos() {
   listaProdutos.addEventListener("keydown", abrirCardComTeclado);
 
   listaFavoritos.addEventListener("click", (evento) => {
-    const botao = evento.target.closest("[data-favorite-id]");
+    const botaoFavorito = evento.target.closest("[data-favorite-id]");
 
-    if (botao) {
-      alternarFavorito(botao.dataset.favoriteId);
+    if (botaoFavorito) {
+      alternarFavorito(botaoFavorito.dataset.favoriteId);
       return;
     }
 
@@ -1477,17 +1334,17 @@ function configurarEventos() {
       return;
     }
 
-    alternarFavorito(produtoEmDetalhe.dealID);
+    alternarFavorito(produtoEmDetalhe.id);
     atualizarFavoritoDetalhe(produtoEmDetalhe);
   });
-
 }
 
 configurarEventos();
+montarMenuCategorias();
 atualizarMenuAtivo(window.location.hash || hashMenuPorScroll());
 atualizarEstadoSidebar();
 atualizarBotaoVoltarTopo();
 atualizarCategorias();
 renderFavoritos();
+carregarCategorias();
 carregarProdutos();
-carregarPrecoForzaCarousel();

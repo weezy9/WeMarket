@@ -1,10 +1,11 @@
-const WeGamesStorage = (() => {
-  const FAVORITES_KEY = "wegames:favoritos";
-  const LEGACY_FAVORITES_KEY = "favoritos";
+const WeMarketStorage = (() => {
+  const FAVORITES_KEY = "wemarket:favoritos";
+  const LEGACY_FAVORITES_KEYS = ["wegames:favoritos", "favoritos"];
 
   function carregarFavoritos() {
     try {
-      const favoritosSalvos = localStorage.getItem(FAVORITES_KEY) || localStorage.getItem(LEGACY_FAVORITES_KEY);
+      const favoritosSalvos = localStorage.getItem(FAVORITES_KEY)
+        || LEGACY_FAVORITES_KEYS.map((chave) => localStorage.getItem(chave)).find(Boolean);
       const dados = JSON.parse(favoritosSalvos);
 
       return Array.isArray(dados) ? dados : [];

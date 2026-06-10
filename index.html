@@ -1,145 +1,48 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="WeGames: ofertas de jogos, busca rápida e lista de favoritos." />
-  <title>WeGames</title>
+  <meta name="description" content="WeMarket: interactive product catalog with quick search and favorites." />
+  <title>WeMarket</title>
+  <link rel="icon" type="image/png" href="images/WM.png" />
 
   <link rel="preconnect" href="https://cdn.jsdelivr.net" />
-  <link rel="preconnect" href="https://www.cheapshark.com" />
+  <link rel="preconnect" href="https://dummyjson.com" />
+  <link rel="preconnect" href="https://cdn.dummyjson.com" />
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet" />
   <link rel="stylesheet" href="css/style.css" />
 </head>
 <body>
   <div class="app-shell">
-    <aside id="sidebar" class="sidebar" aria-label="Navegação principal">
-      <a class="brand" href="#inicio" aria-label="Página inicial da WeGames">
-        <img src="images/WeGames.png" class="logo" alt="WeGames" />
+    <aside id="sidebar" class="sidebar" aria-label="Main navigation">
+      <a class="brand" href="#inicio" aria-label="WeMarket home page">
+        <img src="images/WeMarket.png" class="logo" alt="WeMarket" />
       </a>
 
       <nav class="menu">
-        <a class="active" href="#inicio" aria-current="page">Início</a>
-        <a href="#produtos">Loja</a>
-        <a href="#favoritos">Favoritos</a>
+        <a class="active" href="#inicio" aria-current="page">Home</a>
+        <a href="#produtos">Store</a>
+        <a href="#favoritos">Favorites</a>
       </nav>
 
       <section class="category-list" aria-labelledby="categorias-titulo">
-        <h2 id="categorias-titulo">Categorias</h2>
-        <ul id="menuCategorias">
-          <li>
-            <button class="category-button active" type="button" data-category="todos" aria-pressed="true">
-              <span><i class="bi bi-grid-3x3-gap" aria-hidden="true"></i>Todos</span>
-              <small data-category-count>0</small>
-            </button>
-          </li>
-          <li>
-            <button class="category-button" type="button" data-category="acao" aria-pressed="false">
-              <span><i class="bi bi-crosshair" aria-hidden="true"></i>Ação</span>
-              <small data-category-count>0</small>
-            </button>
-          </li>
-          <li>
-            <button class="category-button" type="button" data-category="aventura" aria-pressed="false">
-              <span><i class="bi bi-compass" aria-hidden="true"></i>Aventura</span>
-              <small data-category-count>0</small>
-            </button>
-          </li>
-          <li>
-            <button class="category-button" type="button" data-category="rpg" aria-pressed="false">
-              <span><i class="bi bi-shield" aria-hidden="true"></i>RPG</span>
-              <small data-category-count>0</small>
-            </button>
-          </li>
-          <li>
-            <button class="category-button" type="button" data-category="estrategia" aria-pressed="false">
-              <span><i class="bi bi-diagram-3" aria-hidden="true"></i>Estratégia</span>
-              <small data-category-count>0</small>
-            </button>
-          </li>
-          <li>
-            <button class="category-button" type="button" data-category="corrida" aria-pressed="false">
-              <span><i class="bi bi-speedometer2" aria-hidden="true"></i>Corrida</span>
-              <small data-category-count>0</small>
-            </button>
-          </li>
-          <li>
-            <button class="category-button" type="button" data-category="esportes" aria-pressed="false">
-              <span><i class="bi bi-trophy" aria-hidden="true"></i>Esportes</span>
-              <small data-category-count>0</small>
-            </button>
-          </li>
-          <li>
-            <button class="category-button" type="button" data-category="terror" aria-pressed="false">
-              <span><i class="bi bi-moon-stars" aria-hidden="true"></i>Terror</span>
-              <small data-category-count>0</small>
-            </button>
-          </li>
-          <li>
-            <button class="category-button" type="button" data-category="puzzle" aria-pressed="false">
-              <span><i class="bi bi-puzzle" aria-hidden="true"></i>Puzzle</span>
-              <small data-category-count>0</small>
-            </button>
-          </li>
-          <li>
-            <button class="category-button" type="button" data-category="outros" aria-pressed="false">
-              <span><i class="bi bi-three-dots" aria-hidden="true"></i>Outros</span>
-              <small data-category-count>0</small>
-            </button>
-          </li>
-          <li class="category-more-item dropdown">
-            <button id="maisCategoriasToggle" class="category-button dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-              <span><i class="bi bi-plus-circle" aria-hidden="true"></i>Mais categorias</span>
-            </button>
-            <ul id="maisCategoriasMenu" class="dropdown-menu dropdown-menu-dark category-more-menu">
-              <li>
-                <button class="dropdown-item" type="button" data-category="aventura" aria-pressed="false">
-                  <span><i class="bi bi-compass me-2" aria-hidden="true"></i>Aventura</span>
-                  <small data-category-count>0</small>
-                </button>
-              </li>
-              <li>
-                <button class="dropdown-item" type="button" data-category="estrategia" aria-pressed="false">
-                  <span><i class="bi bi-diagram-3 me-2" aria-hidden="true"></i>Estratégia</span>
-                  <small data-category-count>0</small>
-                </button>
-              </li>
-              <li>
-                <button class="dropdown-item" type="button" data-category="terror" aria-pressed="false">
-                  <span><i class="bi bi-moon-stars me-2" aria-hidden="true"></i>Terror</span>
-                  <small data-category-count>0</small>
-                </button>
-              </li>
-              <li>
-                <button class="dropdown-item" type="button" data-category="puzzle" aria-pressed="false">
-                  <span><i class="bi bi-puzzle me-2" aria-hidden="true"></i>Puzzle</span>
-                  <small data-category-count>0</small>
-                </button>
-              </li>
-              <li>
-                <button class="dropdown-item" type="button" data-category="outros" aria-pressed="false">
-                  <span><i class="bi bi-three-dots me-2" aria-hidden="true"></i>Outros</span>
-                  <small data-category-count>0</small>
-                </button>
-              </li>
-            </ul>
-          </li>
-        </ul>
+        <h2 id="categorias-titulo">Categories</h2>
+        <ul id="menuCategorias"></ul>
       </section>
-
     </aside>
 
     <main id="inicio" class="content">
       <header class="topbar">
-        <button id="sidebarToggle" class="btn btn-icon sidebar-toggle" type="button" aria-controls="sidebar" aria-expanded="true" aria-label="Esconder menu">
+        <button id="sidebarToggle" class="btn btn-icon sidebar-toggle" type="button" aria-controls="sidebar" aria-expanded="true" aria-label="Hide menu">
           <i class="bi bi-list" aria-hidden="true"></i>
         </button>
 
         <form class="search-form" role="search">
-          <label class="visually-hidden" for="busca">Buscar jogos</label>
+          <label class="visually-hidden" for="busca">Search products</label>
           <div class="input-group search-group">
-            <input id="busca" type="search" class="form-control" placeholder="Buscar jogos..." autocomplete="off" />
+            <input id="busca" type="search" class="form-control" placeholder="Search products..." autocomplete="off" />
             <span class="input-group-text" aria-hidden="true">
               <i class="bi bi-search"></i>
             </span>
@@ -148,25 +51,25 @@
 
         <div class="topbar-actions">
           <div class="dropdown">
-            <button class="btn btn-icon notification-btn position-relative" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Abrir notificações">
+            <button class="btn btn-icon notification-btn position-relative" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Open notifications">
               <i class="bi bi-bell"></i>
               <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill text-bg-danger">
                 2
-                <span class="visually-hidden">notificações novas</span>
+                <span class="visually-hidden">new notifications</span>
               </span>
             </button>
             <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-end notification-menu">
-              <li><h2 class="dropdown-header">Notificações</h2></li>
+              <li><h2 class="dropdown-header">Notifications</h2></li>
               <li>
                 <a class="dropdown-item d-flex align-items-center justify-content-between gap-3" href="#produtos">
-                  <span>Novas ofertas disponíveis</span>
-                  <span class="unread-dot bg-danger rounded-circle" aria-label="Não lida"></span>
+                  <span>New products available</span>
+                  <span class="unread-dot bg-danger rounded-circle" aria-label="Unread"></span>
                 </a>
               </li>
               <li>
                 <a class="dropdown-item d-flex align-items-center justify-content-between gap-3" href="#favoritos">
-                  <span>Revise seus favoritos</span>
-                  <span class="unread-dot bg-danger rounded-circle" aria-label="Não lida"></span>
+                  <span>Review your favorites</span>
+                  <span class="unread-dot bg-danger rounded-circle" aria-label="Unread"></span>
                 </a>
               </li>
             </ul>
@@ -174,80 +77,52 @@
 
           <div class="dropdown">
             <button id="profileToggle" class="btn profile-toggle dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-              <img id="profileAvatar" src="images/playerone.svg" class="avatar rounded-circle" alt="Foto de PlayerOne" />
-              <span id="profileName">PlayerOne</span>
+              <img id="profileAvatar" src="images/playerone.svg" class="avatar rounded-circle" alt="ClientOne profile picture" />
+              <span id="profileName">ClientOne</span>
             </button>
             <div class="dropdown-menu dropdown-menu-dark dropdown-menu-end profile-menu">
               <div class="profile-card">
                 <div class="d-flex align-items-center gap-3">
                   <img id="profileMenuAvatar" src="images/playerone.svg" class="avatar avatar-lg rounded-circle" alt="" />
                   <div>
-                    <strong id="profileMenuName">PlayerOne</strong>
+                    <strong id="profileMenuName">ClientOne</strong>
                     <span id="profileStatus" class="d-flex align-items-center gap-2 text-secondary small">
                       <span id="profileStatusDot" class="status-dot bg-success rounded-circle" aria-hidden="true"></span>
-                      <span id="profileStatusText">Jogador ativo</span>
+                      <span id="profileStatusText">Active customer</span>
                     </span>
                   </div>
                 </div>
                 <hr class="dropdown-divider" />
-                <a class="dropdown-item" href="#favoritos"><i class="bi bi-star me-2"></i>Favoritos</a>
-                <a class="dropdown-item" href="#produtos"><i class="bi bi-controller me-2"></i>Loja</a>
-                <button id="profileLogout" class="dropdown-item" type="button"><i class="bi bi-box-arrow-right me-2"></i>Sair</button>
+                <a class="dropdown-item" href="#favoritos"><i class="bi bi-star me-2"></i>Favorites</a>
+                <a class="dropdown-item" href="#produtos"><i class="bi bi-bag me-2"></i>Store</a>
+                <button id="profileLogout" class="dropdown-item" type="button"><i class="bi bi-box-arrow-right me-2"></i>Sign out</button>
               </div>
             </div>
           </div>
         </div>
       </header>
 
-      <section id="heroCarousel" class="banner carousel slide" data-bs-ride="carousel" data-bs-interval="5500" aria-label="Jogos em destaque">
-        <div class="carousel-indicators banner-indicators">
-          <button type="button" data-bs-target="#heroCarousel" data-bs-slide-to="0" class="active" aria-current="true" aria-label="Slide 1"></button>
-          <button type="button" data-bs-target="#heroCarousel" data-bs-slide-to="1" aria-label="Slide 2"></button>
-          <button type="button" data-bs-target="#heroCarousel" data-bs-slide-to="2" aria-label="Slide 3"></button>
-        </div>
+      <section id="heroCarousel" class="banner carousel slide" data-bs-ride="carousel" data-bs-interval="5500" aria-label="Featured products">
+        <div id="heroIndicators" class="carousel-indicators banner-indicators"></div>
 
-        <div class="carousel-inner">
+        <div id="heroSlides" class="carousel-inner">
           <div class="carousel-item active">
-            <div class="banner-slide banner-slide-contain" data-carousel-game="Hogwarts Legacy" style="--banner-image: url('https://cdn.cloudflare.steamstatic.com/steam/apps/990080/library_hero.jpg');">
+            <div class="banner-slide banner-slide-contain" style="--banner-image: url('images/WeMarket.png');">
               <div class="banner-content">
-                <span class="badge text-bg-primary">Oferta</span>
-                <h1>Hogwarts Legacy</h1>
-                <p>Explore Hogwarts, domine feitiços e viva sua própria jornada bruxa.</p>
-                <strong class="banner-price">Ofertas disponíveis</strong>
-                <button class="btn btn-primary" type="button">Ver detalhes</button>
-              </div>
-            </div>
-          </div>
-
-          <div class="carousel-item">
-            <div class="banner-slide" data-carousel-game="Forza Horizon 5" style="--banner-image: url('https://cdn.cloudflare.steamstatic.com/steam/apps/1551360/library_hero.jpg');">
-              <div class="banner-content">
-                <span class="badge text-bg-primary">Destaque</span>
-                <h1>Forza Horizon 5</h1>
-                <p>Velocidade, exploração e descontos em alta rotação.</p>
-                <strong id="forzaCarouselPrice" class="banner-price">Carregando oferta...</strong>
-                <button class="btn btn-primary" type="button">Ver detalhes</button>
-              </div>
-            </div>
-          </div>
-
-          <div class="carousel-item">
-            <div class="banner-slide" data-carousel-game="Cyberpunk 2077" style="--banner-image: url('https://cdn.cloudflare.steamstatic.com/steam/apps/1091500/library_hero.jpg');">
-              <div class="banner-content">
-                <span class="badge text-bg-primary">Oferta</span>
-                <h1>Cyberpunk 2077</h1>
-                <p>Explore mundos intensos e encontre sua próxima aventura.</p>
-                <strong class="banner-price">Ofertas atualizadas</strong>
-                <button class="btn btn-primary" type="button">Ver detalhes</button>
+                <span class="badge text-bg-primary">Featured</span>
+                <h1>WeMarket</h1>
+                <p>Products selected for you.</p>
+                <strong class="banner-price">Loading products...</strong>
+                <button class="btn btn-primary" type="button">View details</button>
               </div>
             </div>
           </div>
         </div>
 
-        <button class="carousel-control-prev banner-control" type="button" data-bs-target="#heroCarousel" data-bs-slide="prev" aria-label="Slide anterior">
+        <button class="carousel-control-prev banner-control" type="button" data-bs-target="#heroCarousel" data-bs-slide="prev" aria-label="Previous slide">
           <span class="carousel-control-prev-icon" aria-hidden="true"></span>
         </button>
-        <button class="carousel-control-next banner-control" type="button" data-bs-target="#heroCarousel" data-bs-slide="next" aria-label="Próximo slide">
+        <button class="carousel-control-next banner-control" type="button" data-bs-target="#heroCarousel" data-bs-slide="next" aria-label="Next slide">
           <span class="carousel-control-next-icon" aria-hidden="true"></span>
         </button>
       </section>
@@ -255,24 +130,24 @@
       <section id="produtos" class="store-section" aria-labelledby="produtos-titulo">
         <div class="section-title">
           <div>
-            <span class="section-kicker">Loja</span>
-            <h2 id="produtos-titulo">Jogos em destaque</h2>
+            <span class="section-kicker">Store</span>
+            <h2 id="produtos-titulo">Featured products</h2>
           </div>
           <span id="contadorProdutos" class="result-count" aria-live="polite"></span>
         </div>
 
-        <div id="statusProdutos" class="status-message" role="status" aria-live="polite">Carregando ofertas...</div>
+        <div id="statusProdutos" class="status-message" role="status" aria-live="polite">Loading products...</div>
         <div id="listaProdutos" class="row g-4" aria-live="polite"></div>
         <div class="load-more">
-          <button id="carregarMais" class="btn btn-outline-light" type="button" hidden>Carregar mais jogos</button>
+          <button id="carregarMais" class="btn btn-outline-light" type="button" hidden>Load more products</button>
         </div>
       </section>
 
       <section id="favoritos" class="store-section" aria-labelledby="favoritos-titulo">
         <div class="section-title">
           <div>
-            <span class="section-kicker">Biblioteca</span>
-            <h2 id="favoritos-titulo">Meus favoritos</h2>
+            <span class="section-kicker">Library</span>
+            <h2 id="favoritos-titulo">My favorites</h2>
           </div>
           <span id="contadorFavoritos" class="result-count" aria-live="polite"></span>
         </div>
@@ -282,15 +157,15 @@
     </main>
   </div>
 
-  <button id="scrollTopButton" class="btn scroll-top-button" type="button" aria-label="Voltar ao topo">
+  <button id="scrollTopButton" class="btn scroll-top-button" type="button" aria-label="Back to top">
     <i class="bi bi-arrow-up" aria-hidden="true"></i>
   </button>
 
   <div class="toast-container position-fixed bottom-0 end-0 p-3">
     <div id="profileToast" class="toast text-bg-dark border-0" role="status" aria-live="polite" aria-atomic="true">
       <div class="d-flex">
-        <div id="profileToastBody" class="toast-body">Você saiu da conta.</div>
-        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Fechar"></button>
+        <div id="profileToastBody" class="toast-body">You signed out.</div>
+        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
       </div>
     </div>
   </div>
@@ -300,7 +175,7 @@
       <div class="modal-content game-detail-content">
         <div id="gameDetailBackdrop" class="game-detail-backdrop" aria-hidden="true"></div>
 
-        <button type="button" class="btn-close btn-close-white game-detail-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+        <button type="button" class="btn-close btn-close-white game-detail-close" data-bs-dismiss="modal" aria-label="Close"></button>
 
         <div class="game-detail-layout">
           <div class="game-detail-media">
@@ -310,11 +185,11 @@
           <div class="game-detail-info">
             <div class="game-detail-tags">
               <span id="gameDetailDiscount" class="discount"></span>
-              <span id="gameDetailStore" class="game-detail-store">Oferta CheapShark</span>
+              <span id="gameDetailStore" class="game-detail-store">Category</span>
             </div>
 
-            <h2 id="gameDetailTitle">Detalhes do jogo</h2>
-            <p id="gameDetailSubtitle" class="game-detail-subtitle">Veja preço, avaliação e informações da oferta.</p>
+            <h2 id="gameDetailTitle">Product details</h2>
+            <p id="gameDetailSubtitle" class="game-detail-subtitle">View price, rating, and product information.</p>
 
             <div class="game-detail-price-row">
               <strong id="gameDetailPrice" class="price"></strong>
@@ -323,29 +198,29 @@
 
             <dl class="game-detail-stats">
               <div>
-                <dt>Steam</dt>
-                <dd id="gameDetailSteam">-</dd>
+                <dt>Brand</dt>
+                <dd id="productDetailBrand">-</dd>
               </div>
               <div>
-                <dt>Metacritic</dt>
-                <dd id="gameDetailMetacritic">-</dd>
+                <dt>Stock</dt>
+                <dd id="productDetailStock">-</dd>
               </div>
               <div>
-                <dt>Oferta</dt>
-                <dd id="gameDetailRating">-</dd>
+                <dt>Rating</dt>
+                <dd id="productDetailRating">-</dd>
               </div>
               <div>
-                <dt>Lançamento</dt>
-                <dd id="gameDetailRelease">-</dd>
+                <dt>Status</dt>
+                <dd id="productDetailStatus">-</dd>
               </div>
             </dl>
 
             <div class="game-detail-actions">
               <button id="gameDetailFavorite" class="btn btn-outline-light" type="button">
-                <i class="bi bi-star me-2"></i>Favoritar
+                <i class="bi bi-star me-2"></i>Add to favorites
               </button>
               <a id="gameDetailDeal" class="btn btn-primary" href="#" target="_blank" rel="noopener noreferrer">
-                Ver oferta
+                View on API
               </a>
             </div>
           </div>

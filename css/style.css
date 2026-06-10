@@ -217,71 +217,92 @@ body.sidebar-hidden .sidebar {
 
 .category-more-item {
   position: relative;
+  z-index: 6000;
 }
 
 .category-more-menu {
   position: relative;
-  width: 240px;
-  min-width: 240px;
+  width: 286px;
+  min-width: 286px;
   padding: 8px;
   border: 1px solid rgba(var(--primary-rgb), .32);
   border-radius: 8px;
   background: #11141b !important;
   background-color: #11141b !important;
-  background-image: linear-gradient(#11141b, #11141b) !important;
-  background-clip: padding-box;
+  background-image: none !important;
+  background-clip: border-box;
   --bs-dropdown-bg: #11141b;
   --bs-dropdown-link-hover-bg: var(--surface-soft);
   box-shadow: 0 24px 60px rgba(0, 0, 0, .72);
   opacity: 1 !important;
-  overflow: visible;
+  overflow: hidden;
   backdrop-filter: none;
   isolation: isolate;
 }
 
 .category-more-menu.show {
-  position: absolute !important;
-  top: 0 !important;
-  left: calc(100% + 12px) !important;
+  position: fixed !important;
+  top: auto !important;
+  right: auto !important;
+  bottom: 20px !important;
+  left: calc(var(--sidebar-width) - 48px) !important;
   transform: none !important;
   margin-top: 0 !important;
-  z-index: 5000;
+  z-index: 7000;
 }
 
-.category-more-menu::after {
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  border-radius: inherit;
+.category-more-scroll-shell {
+  padding: 0;
+  margin: 0;
   background: #11141b;
-  content: "";
-  pointer-events: none;
+}
+
+.category-more-scroll {
+  display: grid;
+  gap: 2px;
+  max-height: min(360px, calc(100vh - 72px));
+  padding: 0 18px 0 0;
+  margin: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  background: #11141b;
+  list-style: none;
+  scrollbar-color: rgba(var(--primary-rgb), .72) #11141b;
+  scrollbar-width: thin;
+}
+
+.category-more-scroll::-webkit-scrollbar {
+  width: 8px;
+}
+
+.category-more-scroll::-webkit-scrollbar-track {
+  border-radius: 999px;
+  background: #11141b;
+}
+
+.category-more-scroll::-webkit-scrollbar-thumb {
+  border: 2px solid #11141b;
+  border-radius: 999px;
+  background: rgba(var(--primary-rgb), .72);
 }
 
 .category-more-menu.show::before {
-  position: absolute;
-  top: 16px;
-  right: 100%;
-  z-index: 1;
-  width: 12px;
-  height: 1px;
-  background: rgba(var(--primary-rgb), .42);
-  content: "";
+  display: none;
 }
 
 .category-more-menu > li {
   position: relative;
-  z-index: 1;
+  background: #11141b;
 }
 
 .category-more-menu .dropdown-item {
   position: relative;
-  z-index: 1;
   min-height: 38px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  gap: 10px;
+  padding: 8px 10px;
   border-radius: 6px;
   background: #11141b;
   color: var(--muted);
@@ -289,11 +310,29 @@ body.sidebar-hidden .sidebar {
 }
 
 .category-more-menu .dropdown-item i {
+  width: 16px;
+  flex: 0 0 16px;
+  text-align: center;
   color: var(--primary);
 }
 
+.category-more-menu .dropdown-item span {
+  min-width: 0;
+  flex: 1 1 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  overflow: hidden;
+}
+
+.category-more-menu .dropdown-item span:not([data-category-count]) {
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .category-more-menu .dropdown-item small {
-  min-width: 26px;
+  min-width: 38px;
+  flex: 0 0 38px;
   padding: 2px 7px;
   border-radius: 999px;
   background: rgba(255, 255, 255, .08);
@@ -515,7 +554,7 @@ body.sidebar-hidden .sidebar-toggle {
 }
 
 .banner {
-  min-height: 320px;
+  min-height: 368px;
   position: relative;
   overflow: hidden;
   display: block;
@@ -530,7 +569,7 @@ body.sidebar-hidden .sidebar-toggle {
 .banner .carousel-inner,
 .banner .carousel-item {
   min-height: inherit;
-  height: 320px;
+  height: 368px;
 }
 
 .banner-slide {
@@ -538,7 +577,7 @@ body.sidebar-hidden .sidebar-toggle {
   height: 100%;
   display: flex;
   align-items: center;
-  padding: clamp(28px, 5vw, 56px);
+  padding: clamp(32px, 4vw, 48px) clamp(52px, 5vw, 72px);
   cursor: pointer;
   background:
     linear-gradient(90deg, rgba(8, 9, 13, .92), rgba(8, 9, 13, .56), rgba(8, 9, 13, .2)),
@@ -551,13 +590,13 @@ body.sidebar-hidden .sidebar-toggle {
   background:
     linear-gradient(90deg, rgba(8, 9, 13, .92), rgba(8, 9, 13, .62), rgba(8, 9, 13, .26)),
     var(--banner-image);
-  background-position: center;
+  background-position: center, right center;
   background-repeat: no-repeat;
-  background-size: cover;
+  background-size: cover, min(52vw, 560px) auto;
 }
 
 .banner-content {
-  max-width: 520px;
+  max-width: min(560px, 48vw);
 }
 
 .banner .badge {
@@ -566,23 +605,34 @@ body.sidebar-hidden .sidebar-toggle {
 }
 
 .banner h1 {
-  margin: 0 0 10px;
-  font-size: 3rem;
+  max-width: min(620px, 52vw);
+  display: -webkit-box;
+  margin: 0 0 8px;
+  font-size: clamp(1.85rem, 3vw, 2.75rem);
   font-weight: 900;
-  line-height: 1;
+  line-height: .98;
   text-transform: uppercase;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
 }
 
 .banner p {
   max-width: 38rem;
+  display: -webkit-box;
   margin: 0 0 14px;
   color: var(--muted-strong);
-  font-size: 1.06rem;
+  font-size: clamp(.95rem, 1.25vw, 1.06rem);
+  line-height: 1.48;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
 }
 
 .banner-price {
   display: block;
-  margin-bottom: 20px;
+  margin-bottom: 14px;
   color: var(--warning);
   font-size: 1.35rem;
 }
@@ -864,10 +914,13 @@ body.sidebar-hidden .sidebar-toggle {
   align-items: center;
   padding: 0 10px;
   border: 1px solid var(--line);
+  background: transparent;
   color: var(--muted-strong);
+  font: inherit;
   font-size: .86rem;
   font-weight: 800;
   text-decoration: none;
+  cursor: pointer;
 }
 
 .deal-link:hover {
@@ -1175,6 +1228,7 @@ body.sidebar-hidden .sidebar-toggle {
 
   .category-more-menu.show {
     position: static !important;
+    inset: auto !important;
     margin-top: 8px !important;
   }
 
@@ -1243,17 +1297,18 @@ body.sidebar-hidden .sidebar-toggle {
   }
 
   .banner {
-    min-height: 280px;
+    min-height: 360px;
   }
 
   .banner .carousel-inner,
   .banner .carousel-item {
-    height: 280px;
+    height: 360px;
   }
 
   .banner-slide {
     min-height: 100%;
-    padding: 26px 52px 42px 20px;
+    align-items: flex-end;
+    padding: 28px 52px 52px 20px;
   }
 
   .banner-slide-contain {
@@ -1266,7 +1321,17 @@ body.sidebar-hidden .sidebar-toggle {
   }
 
   .banner h1 {
-    font-size: 2.25rem;
+    max-width: 100%;
+    font-size: clamp(1.85rem, 8vw, 2.35rem);
+    -webkit-line-clamp: 3;
+  }
+
+  .banner-content {
+    max-width: 100%;
+  }
+
+  .banner p {
+    -webkit-line-clamp: 2;
   }
 
   .result-count {
