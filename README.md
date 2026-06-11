@@ -63,9 +63,9 @@ WeMarket/
 
 ## Como Executar
 
-Abra o arquivo `index.html` diretamente no navegador.
+Acesse a aplicacao publicada pelo Github Pages:
 
-Tambem e possivel publicar o projeto em um servico de hospedagem estatica, como GitHub Pages.
+#### [Acessar site WeMarket](https://weezy9.github.io/WeMarket/)
 
 ## Observacoes
 
